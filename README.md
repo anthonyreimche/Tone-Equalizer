@@ -6,10 +6,9 @@ pixel's luminance with an edge-aware filter, so a face, a sky or a backlit wall
 sits in one octave and moves as one; nine sliders from −8 EV to 0 EV (or the
 curve on the graph, or the wheel over the image) set a gain per octave.
 
-Requires Safelight 3.1.0 or later, and that build must include the lossless
-measurement frame (with inter-stage variables and bag-driven pass counts, the
-three core hooks it uses). Without it the version check passes but the mask is
-measured through a JPEG, and the histogram, the readout and Auto read wrong.
+Requires Safelight 3.0.1 or later, the first release with the three core hooks
+it uses: inter-stage variables, bag-driven pass counts and the lossless
+measurement frame.
 
 ## Using it
 

@@ -1,6 +1,6 @@
 // The slice of Safelight's extension API this extension touches, mirrored from
 // the app's src/extensions/types.ts, src/extensions/ui-kit.tsx,
-// src/extensions/develop-host.tsx and src/state/develop-store.ts (core 3.1.0).
+// src/extensions/develop-host.tsx and src/state/develop-store.ts (core 3.0.1).
 // Extensions are standalone bundles, so the host's source is not on the type
 // path; React types come from @types/react (dev only).
 
@@ -249,7 +249,7 @@ export interface SafelightAPI {
   develop: {
     useDevelopOverlay(): DevelopOverlayState;
     captureFrame(params: DevelopParams, options?: CaptureOptions): Promise<ImageBitmap>;
-    /** The frame is a JPEG by default; `lossless: true` returns it from a PNG so every channel byte the pipeline wrote survives (core 3.1.0), and is null where only the grid's camera preview could stand in. */
+    /** The frame is a JPEG by default; `lossless: true` returns it from a PNG so every channel byte the pipeline wrote survives (core 3.0.1), and is null where only the grid's camera preview could stand in. */
     renderPhotoFrame(
       photoId: string,
       params: DevelopParams,

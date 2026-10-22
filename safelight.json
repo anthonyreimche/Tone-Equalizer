@@ -9,5 +9,5 @@
   "categories": ["Develop"],
   "keywords": ["tone-equalizer", "darktable", "ansel", "shadows", "highlights", "relight", "dodge", "burn", "exposure", "local-contrast", "scene-referred"],
   "repository": "anthonyreimche/Tone-Equalizer",
-  "minAppVersion": "3.1.0"
+  "minAppVersion": "3.0.1"
 }
