@@ -164,11 +164,17 @@ interface Drag {
 
 export function ToneGraph() {
   const { useEffect, useLayoutEffect, useRef, useState } = api().react;
-  const dev = api().stores.useDevelopStore;
-  const paramBag = dev((s) => s.paramBag);
-  const histogram = store()((s) => s.probe?.histogram ?? null);
-  const cursorEv = store()((s) => s.cursor?.ev ?? null);
-  const unstable = store()((s) => s.unstable);
+  // The photo's bag in the dock, a mask's in the Masking panel. The probe's
+  // histogram, the image cursor and the unstable note are the photo's.
+  const scope = api().develop.useParamScope();
+  const inMask = scope.maskId !== null;
+  const paramBag = scope.getParams();
+  const histogram = store()((s) => (inMask ? null : (s.probe?.histogram ?? null)));
+  const cursorEv = store()((s) => (inMask ? null : (s.cursor?.ev ?? null)));
+  const unstable = store()((s) => s.unstable) && !inMask;
+  const setUnstable = (on: boolean) => {
+    if (!inMask) store().getState().setUnstable(on);
+  };
   const [width, setWidth] = useState(240);
   const [hoverNode, setHoverNode] = useState<number | null>(null);
   const [mouseX, setMouseX] = useState<number | null>(null);
@@ -245,23 +251,23 @@ export function ToneGraph() {
     const drag = dragRef.current;
     if (!drag) return;
     const step = dragStep(drag, at, r);
-    const p = readParams(dev.getState().paramBag);
+    const p = readParams(scope.getParams());
     const bands = interactiveEdit(p.bands, sigmaOf(p.curveSmoothing), step.x0, step.offset);
-    if (bands) dev.getState().setDynParams(deriveAll({ ...p, bands }));
-    store().getState().setUnstable(bands === null);
+    if (bands) scope.setParams(deriveAll({ ...p, bands }));
+    setUnstable(bands === null);
     dragRef.current = { x: at.x, y: at.y, moved: drag.moved || bands !== null };
   };
 
   const end = () => {
     const drag = dragRef.current;
     dragRef.current = null;
-    if (drag?.moved) void dev.getState().commitEdit("Tone Equalizer curve");
+    if (drag?.moved) scope.commit("Tone Equalizer curve");
   };
 
   const onDoubleClick = () => {
-    dev.getState().setDynParams(deriveAll({ ...readParams(dev.getState().paramBag), bands: DEFAULT_PARAMS.bands }));
-    store().getState().setUnstable(false);
-    void dev.getState().commitEdit("Tone Equalizer reset curve");
+    scope.setParams(deriveAll({ ...readParams(scope.getParams()), bands: DEFAULT_PARAMS.bands }));
+    setUnstable(false);
+    scope.commit("Tone Equalizer reset curve");
   };
 
   return h(

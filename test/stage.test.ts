@@ -32,6 +32,13 @@ import { DERIVED_KEYS, EDIT_KEYS, MASK_VARIABLE, STAGE_ID, VIEW_MODE_KEY, VIEW_S
 import { allStages, correctionStage, viewStage } from "../src/stage";
 import { fetchBudget, inlineFetches } from "./support/fetch-budget";
 
+describe("masks", () => {
+  it("runs the correction again inside masks, and never the mask view", () => {
+    expect(correctionStage().mask).toEqual({ maskable: true });
+    expect(viewStage().mask).toBeUndefined();
+  });
+});
+
 describe("glslLiteral", () => {
   it.each([
     [1, "1.0"],

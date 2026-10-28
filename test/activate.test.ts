@@ -7,7 +7,8 @@
 import { describe, expect, it } from "vitest";
 import { activate, deactivate } from "../src/index";
 import { DEFAULT_PARAMS } from "../src/model";
-import { STAGE_ID, VIEW_STAGE_ID, deriveAll, qualified, resetPatch } from "../src/params";
+import { TonePanel } from "../src/Panel";
+import { DERIVED_KEYS, EDIT_KEYS, STAGE_ID, VIEW_STAGE_ID, deriveAll, qualified, resetPatch } from "../src/params";
 import { store } from "../src/store";
 import { fakeApi } from "./support/fake-api";
 
@@ -19,6 +20,35 @@ describe("activate", () => {
     expect(rig.panels.map((p) => [p.id, p.title])).toEqual([["tone-equalizer.panel", "Tone Equalizer"]]);
     expect(rig.panels[0].defaultDock).toMatchObject({ module: "develop", direction: "right" });
     expect(rig.slots.map((s) => [s.id, s.slot])).toEqual([["tone-equalizer.overlay", "develop-canvas-overlay"]]);
+    deactivate();
+  });
+
+  it("offers the panel in masks, owning every edit and GPU key it writes", () => {
+    const rig = fakeApi();
+    activate(rig.api);
+    const mask = rig.panels[0].mask;
+    expect(mask?.component).toBe(TonePanel);
+    expect([...(mask?.owns ?? [])].sort()).toEqual([...EDIT_KEYS, ...DERIVED_KEYS].map(qualified).sort());
+    deactivate();
+  });
+
+  it("re-derives a mask's bag whose GPU keys disagree with its edit", () => {
+    const rig = fakeApi();
+    activate(rig.api);
+    rig.inMask();
+    rig.develop.getState().updateMaskBag("mask-1", { [qualified("b4")]: 1 });
+    expect(rig.maskBag()).toMatchObject(deriveAll({ ...DEFAULT_PARAMS, bands: [0, 0, 0, 0, 1, 0, 0, 0, 0] }));
+    expect(rig.develop.getState().paramBag[qualified("on")]).toBeUndefined();
+    deactivate();
+  });
+
+  it("leaves a mask's bag alone once it agrees with its edit", () => {
+    const rig = fakeApi();
+    activate(rig.api);
+    rig.inMask(deriveAll({ ...DEFAULT_PARAMS, bands: [0, 0, 0, 0, 1, 0, 0, 0, 0] }));
+    const before = rig.develop.getState().params;
+    rig.develop.setState({ photoId: "p1" });
+    expect(rig.develop.getState().params).toBe(before);
     deactivate();
   });
 

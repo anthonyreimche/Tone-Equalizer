@@ -11,7 +11,9 @@
 //  • the probe round-trips the mask exposure and the mask display matches
 //    darktable's formula, on both versions;
 //  • with an input mask above 2^8, whose square binary16 cannot hold, the
-//    frame and the probed mask match the model's capped statistics.
+//    frame and the probed mask match the model's capped statistics;
+//  • a mask's copy of the correction runs its own filter and curve inside the
+//    mask, matching the model there, and leaves the rest of the frame as it was.
 
 import { describe, expect, it } from "vitest";
 import { fitCurve, gainAt } from "@te/curve";
@@ -32,7 +34,7 @@ import { deriveAll, probePatch, VIEW_MODE_KEY } from "@te/params";
 import { PRESETS, compress, dilate } from "@te/presets";
 import { allStages } from "@te/stage";
 import { backlit, fill, scaled } from "@te-test/support/scenes";
-import { CURRENT_PROCESS_VERSION, LEGACY_PROCESS_VERSION } from "@/catalog/types";
+import { CURRENT_PROCESS_VERSION, LEGACY_PROCESS_VERSION, defaultMaskAdjustments, type Mask } from "@/catalog/types";
 import type { ResolvedPipeline } from "@/extensions/pipelines";
 import { toStageSpace } from "@/rendering/stage-space";
 import type { WebGLRenderer } from "@/rendering/webgl/renderer";
@@ -85,11 +87,12 @@ function render(
   img: Image,
   bag: Record<string, unknown>,
   { withExtension = true, processVersion = CURRENT_PROCESS_VERSION, pipeline = LINEAR_PROBE_PIPELINE }: Rig = {},
+  masks: Mask[] = [],
 ): Frame {
   const stages = withExtension ? [...builtinStages(), ...allStages()] : builtinStages();
   return withRenderer({ stages, pipeline }, (r: WebGLRenderer) => {
     r.setImage(toFloatImage(img));
-    r.setParams(identityParams({ processVersion }));
+    r.setParams(identityParams({ processVersion, masks }));
     r.setContributedParams(bag);
     return r.captureFloatFrame()!;
   });
@@ -341,5 +344,49 @@ describe("Tone Equalizer on the real renderer", () => {
     expect(inRange.compared).toBeGreaterThan(0.9 * mask.length);
     expect(inRange.max).toBeLessThanOrEqual(PROBE_TOLERANCE);
     expect(fullSpan.max).toBeLessThanOrEqual(PROBE_TOLERANCE);
+  });
+});
+
+// A linear gradient whose step sits at u = 0.5: the mask covers the right half.
+const rightHalf = (bag: Record<string, unknown>): Mask => ({
+  id: "m",
+  name: "Mask",
+  visible: true,
+  invert: false,
+  opacity: 100,
+  adj: defaultMaskAdjustments(),
+  panels: ["tone-equalizer.panel"],
+  bag,
+  components: [{ id: "right", kind: "linear", mode: "add", invert: false, linear: { x0: 0.5, y0: 0, x1: 0.5001, y1: 0 } }],
+});
+// Columns either side of the step, clear of the one it straddles.
+const leftOfMask = (k: number) => k % SCENE.width < SCENE.width / 2 - 1;
+const insideMask = (k: number) => k % SCENE.width > SCENE.width / 2;
+
+describe("Tone Equalizer in a mask", () => {
+  const p = with_({ bands: compress(0.45), exposureBoost: -1.57, blending: 8 });
+
+  it("runs the mask's own filter and curve inside the mask, and leaves the rest as it was", () => {
+    const off = render(SCENE, deriveAll(DEFAULT_PARAMS));
+    const masked = render(SCENE, deriveAll(DEFAULT_PARAMS), {}, [rightHalf(deriveAll(p))]);
+    for (let k = 0; k < SCENE.width * SCENE.height; k++) {
+      if (!leftOfMask(k)) continue;
+      for (let ch = 0; ch < 3; ch++) expect(masked.data[4 * k + ch]).toBe(off.data[4 * k + ch]);
+    }
+    const err = evError(masked, expected(SCENE, p), inputs(SCENE).r709, insideMask);
+    console.log(`masked EIGF, compress medium: max ${err.max.toFixed(4)} EV, mean ${err.mean.toFixed(4)} EV`);
+    expect(err.max).toBeLessThanOrEqual(0.03);
+    expect(err.mean).toBeLessThanOrEqual(0.005);
+  });
+
+  // The copy reads the current image, so the frame leaves the stage's Rec.2020
+  // view for its split and comes back: that round trip may move a value by
+  // one half-float step, as it does beside any reader.
+  it("leaves the photo's own correction alone while the mask's is at rest", () => {
+    const photo = render(SCENE, deriveAll(p));
+    const idleMask = render(SCENE, deriveAll(p), {}, [rightHalf(deriveAll(DEFAULT_PARAMS))]);
+    const worst = worstDifference(idleMask, photo);
+    console.log(`idle mask copy: worst ${worst.toExponential(2)}`);
+    expect(worst).toBeLessThanOrEqual(2e-4);
   });
 });

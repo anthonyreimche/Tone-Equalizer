@@ -8,7 +8,7 @@
 
 import { ToneEqualizerOverlay } from "./Overlay";
 import { TonePanel } from "./Panel";
-import { EXT_ID, rederivePatch, resetPatch } from "./params";
+import { DERIVED_KEYS, EDIT_KEYS, EXT_ID, qualified, rederivePatch, resetPatch } from "./params";
 import { api, initRuntime } from "./runtime";
 import type { DevelopStoreState, SafelightAPI } from "./safelight";
 import { allStages } from "./stage";
@@ -39,19 +39,30 @@ export function activate(host: SafelightAPI): void {
     component: TonePanel,
     defaultDock: { module: "develop", direction: "right", order: 6, width: 268 },
     onReset: reset,
+    // The same panel edits a mask's Tone Equalizer in the Masking panel's
+    // Adjust tab; the GPU reads only the derived keys, so it owns those too.
+    mask: { component: TonePanel, owns: [...EDIT_KEYS, ...DERIVED_KEYS].map(qualified) },
   });
 
   host.registerSlot({ id: OVERLAY_ID, slot: "develop-canvas-overlay", component: ToneEqualizerOverlay, order: 55 });
 
   unsubscribe?.();
   // A bag whose GPU keys disagree with its edit (a preset that carried only
-  // some keys, an edit from another release) is re-derived live.
+  // some keys, an edit from another release) is re-derived live, the photo's
+  // and each mask's.
   unsubscribe = host.stores.useDevelopStore.subscribe((state: DevelopStoreState, prev: DevelopStoreState) => {
     if (state.photoId !== prev.photoId) {
       const ui = store().getState();
       ui.setShowMask(false);
       ui.setAdjusting(false);
       ui.setUnstable(false);
+    }
+    if (state.params.masks !== prev.params.masks) {
+      for (const mask of state.params.masks) {
+        if (prev.params.masks.some((m) => m.id === mask.id && m.bag === mask.bag)) continue;
+        const patch = mask.bag ? rederivePatch(mask.bag) : null;
+        if (patch) state.updateMaskBag(mask.id, patch);
+      }
     }
     if (state.paramBag === prev.paramBag) return;
     const patch = rederivePatch(state.paramBag);

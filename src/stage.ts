@@ -101,6 +101,9 @@ export function correctionStage(): ProcessingStageContribution {
     ],
     produces: [{ name: MASK_VARIABLE, glslType: "float", producer: "teMaskOut" }],
     presetScope: "global",
+    // A mask's copy runs its own filter with the mask's settings; what it
+    // produces stays inside the copy, so the mask view shows the photo's mask.
+    mask: { maskable: true },
   };
 }
 

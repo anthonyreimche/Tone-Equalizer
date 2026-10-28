@@ -26,6 +26,14 @@ measurement frame.
   scroll to brighten or darken everything at that exposure (0.25 EV, Shift 1
   EV, Alt 0.1 EV). Ctrl/⌘/Space still pan and zoom; Esc stops.
 - **Presets**: darktable's thirteen, under its names.
+- **In masks**: add Tone Equalizer to a mask from the Masking panel's Adjust
+  tab and it runs again inside that mask only, with its own bands, curve and
+  exposure mask, like a second darktable instance with a drawn mask. The
+  mask's Tone Equalizer has everything but the auto buttons, Display exposure
+  mask and Adjust on image, which act on the photo's own; set its mask
+  compensations by hand. It needs the current processing: on a photo edited
+  in an earlier Safelight, use Update processing first. Each mask that uses it
+  runs its own filter, so many such masks take a moment longer to show.
 
 The panel measures the mask while it is expanded, after every edit and even on
 an untouched photo, so collapse it when you're done.

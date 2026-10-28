@@ -3,6 +3,11 @@
 // compensations with their auto buttons; masking: the filter), the preset
 // menu, and the Display exposure mask / Adjust on image toggles. Sliders write
 // the bag live and commit on release with their own label.
+//
+// It edits whatever useParamScope hands it: the photo's bag in the dock, a
+// mask's in the Masking panel's Adjust tab. The auto buttons, the probe they
+// read and the two toggles measure or drive the photo's own Tone Equalizer, so
+// they show only in the dock.
 
 import type { CSSProperties, ReactNode } from "react";
 import { ToneGraph, WARN_COLOUR } from "./Graph";
@@ -188,18 +193,21 @@ export function TonePanel() {
   const { Slider } = api().components;
   const { Button, SegmentedControl, Select, Stack, Toggle, tokens } = api().ui;
   const dev = api().stores.useDevelopStore;
+  const scope = api().develop.useParamScope();
+  const inMask = scope.maskId !== null;
   const [tab, setTab] = useState<Tab>(readTab);
-  const paramBag = dev((s) => s.paramBag);
   const probe = store()((s) => s.probe);
   // Only the Advanced page compares it, and it stringifies the core params.
-  const signature = dev((s) => (tab === "advanced" ? probeSignature(s) : ""));
+  const signature = dev((s) => (tab === "advanced" && !inMask ? probeSignature(s) : ""));
   const showMask = store()((s) => s.showMask);
   const adjusting = store()((s) => s.adjusting);
-  const unstable = store()((s) => s.unstable);
-  const p = readParams(paramBag);
+  // The note a failed graph drag leaves is the photo's curve's.
+  const unstable = store()((s) => s.unstable) && !inMask;
+  const p = readParams(scope.getParams());
   const visible = visibleControls(p.details);
 
   useEffect(() => {
+    if (inMask) return undefined;
     const stop = startLiveProbe();
     return () => {
       stop();
@@ -207,15 +215,15 @@ export function TonePanel() {
       ui.setShowMask(false);
       ui.setAdjusting(false);
     };
-  }, []);
+  }, [inMask]);
 
-  const live = () => readParams(dev.getState().paramBag);
+  const live = () => readParams(scope.getParams());
   const measured = () => measuredHistogram(store().getState().probe, probeSignature(dev.getState()));
   const apply = (next: Params) => {
-    store().getState().setUnstable(false);
-    dev.getState().setDynParams(deriveAll(next));
+    if (!inMask) store().getState().setUnstable(false);
+    scope.setParams(deriveAll(next));
   };
-  const commit = (what: string) => void dev.getState().commitEdit(`Tone Equalizer ${what}`);
+  const commit = (what: string) => scope.commit(`Tone Equalizer ${what}`);
 
   const slider = (spec: SliderSpec): ReactNode => {
     const value = shownValue(spec, spec.read(p));
@@ -290,12 +298,14 @@ export function TonePanel() {
       const contrastBoost = finite(autoContrast(histogram.first, histogram.last, cur));
       return contrastBoost === null ? null : { ...cur, contrastBoost };
     });
+    const compensation = (spec: SliderSpec, button: ReactNode) =>
+      inMask ? slider(spec) : withButton(slider(spec), button);
     return [
       h(ToneGraph, { key: "graph" }),
       unstableNote,
       slider(SMOOTHING_SLIDER),
-      withButton(slider(EXPOSURE_SLIDER), autoExposureButton),
-      visible.contrast ? withButton(slider(CONTRAST_SLIDER), autoContrastButton) : null,
+      compensation(EXPOSURE_SLIDER, autoExposureButton),
+      visible.contrast ? compensation(CONTRAST_SLIDER, autoContrastButton) : null,
     ];
   };
 
@@ -340,8 +350,12 @@ export function TonePanel() {
       },
     }),
     h("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, ...pages[tab]()),
-    h(Toggle, { label: "Display exposure mask", checked: showMask, onChange: (on: boolean) => store().getState().setShowMask(on) }),
-    h(Toggle, { label: "Adjust on image", checked: adjusting, onChange: (on: boolean) => store().getState().setAdjusting(on) }),
-    adjusting ? h("p", { style: hintStyle }, ADJUST_HINT) : null,
+    inMask
+      ? null
+      : h(Toggle, { label: "Display exposure mask", checked: showMask, onChange: (on: boolean) => store().getState().setShowMask(on) }),
+    inMask
+      ? null
+      : h(Toggle, { label: "Adjust on image", checked: adjusting, onChange: (on: boolean) => store().getState().setAdjusting(on) }),
+    adjusting && !inMask ? h("p", { style: hintStyle }, ADJUST_HINT) : null,
   );
 }

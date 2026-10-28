@@ -127,7 +127,7 @@ function T(n) {
 	for (let n = 0; n < 9; n++) for (let a = 0; a < 8; a++) i[n * 8 + a] = w(S(e[n] - t[a]), r);
 	return i;
 }
-function ee(e, t, n, r) {
+function E(e, t, n, r) {
 	if (n < r || r < 2 || n < 2) return null;
 	let i = new Float64Array(r * r), a = new Float64Array(r);
 	for (let o = 0; o < r; o++) {
@@ -174,8 +174,8 @@ function ee(e, t, n, r) {
 	let l = Float32Array.from(c);
 	return l.every(Number.isFinite) ? l : null;
 }
-function E(e, t) {
-	let n = Float32Array.from(e, (e) => S(2 ** S(e))), r = ee(T(t), n, 9, 8);
+function ee(e, t) {
+	let n = Float32Array.from(e, (e) => S(2 ** S(e))), r = E(T(t), n, 9, 8);
 	return r ? {
 		weights: Array.from(r),
 		sigma: t,
@@ -195,7 +195,7 @@ function O(t) {
 	return e.map((e) => D(e, t));
 }
 function te(t, n, r, i) {
-	let a = C(S(S(S(n) * S(n)) / 2)), o = Float32Array.from(t, (t, n) => S(S(2 ** S(t)) * S(2 ** S(w(S(e[n] - S(r)), a) * S(i))))), s = ee(T(n), o, 9, 8);
+	let a = C(S(S(S(n) * S(n)) / 2)), o = Float32Array.from(t, (t, n) => S(S(2 ** S(t)) * S(2 ** S(w(S(e[n] - S(r)), a) * S(i))))), s = E(T(n), o, 9, 8);
 	return s ? O({
 		weights: Array.from(s),
 		sigma: n
@@ -533,7 +533,7 @@ function We() {
 	return e;
 }
 function L(e) {
-	return E(e.bands, p(e.curveSmoothing));
+	return ee(e.bands, p(e.curveSmoothing));
 }
 function Ge(e, t = L(e)) {
 	return e.bands.some((e) => e !== 0) && t.valid;
@@ -1076,104 +1076,106 @@ function Vt(t, n, r, i, a) {
 	}
 }
 function Ht() {
-	let { useEffect: e, useLayoutEffect: t, useRef: n, useState: r } = z().react, i = z().stores.useDevelopStore, a = i((e) => e.paramBag), o = V()((e) => e.probe?.histogram ?? null), s = V()((e) => e.cursor?.ev ?? null), c = V()((e) => e.unstable), [l, u] = r(240), [d, m] = r(null), [h, g] = r(null), [_, v] = r(0), y = n(null), b = n(null), x = n(null), S = n(null), C = Tt(l);
+	let { useEffect: e, useLayoutEffect: t, useRef: n, useState: r } = z().react, i = z().develop.useParamScope(), a = i.maskId !== null, o = i.getParams(), s = V()((e) => a ? null : e.probe?.histogram ?? null), c = V()((e) => a ? null : e.cursor?.ev ?? null), l = V()((e) => e.unstable) && !a, u = (e) => {
+		a || V().getState().setUnstable(e);
+	}, [d, m] = r(240), [h, g] = r(null), [_, v] = r(null), [y, b] = r(0), x = n(null), S = n(null), C = n(null), w = n(null), T = Tt(d);
 	e(() => {
-		let e = y.current;
+		let e = x.current;
 		if (!e || typeof ResizeObserver > "u") return;
 		let t = new ResizeObserver((e) => {
 			let t = Math.round(e[0].contentRect.width);
-			t > 40 && u(t);
+			t > 40 && m(t);
 		});
 		return t.observe(e), () => t.disconnect();
 	}, []), e(() => {
-		let e = new MutationObserver(() => v((e) => e + 1));
+		let e = new MutationObserver(() => b((e) => e + 1));
 		return e.observe(document.documentElement, { attributes: !0 }), e.observe(document.body, { attributes: !0 }), () => e.disconnect();
 	}, []), t(() => {
-		let e = b.current;
+		let e = S.current;
 		if (!e) return;
-		let t = window.devicePixelRatio || 1, n = Math.round(l * t), r = Math.round(C * t);
+		let t = window.devicePixelRatio || 1, n = Math.round(d * t), r = Math.round(T * t);
 		e.width !== n && (e.width = n), e.height !== r && (e.height = r);
 		let i = e.getContext("2d");
-		i && (i.setTransform(t, 0, 0, t, 0, 0), S.current?.epoch !== _ && (S.current = {
-			epoch: _,
+		i && (i.setTransform(t, 0, 0, t, 0, 0), w.current?.epoch !== y && (w.current = {
+			epoch: y,
 			ink: Lt(e)
-		}), Vt(i, l, C, S.current.ink, {
-			fit: L(I(a)),
-			histogram: o,
-			hoverNode: d,
-			mouseX: h,
-			cursorEv: s,
-			unstable: c
+		}), Vt(i, d, T, w.current.ink, {
+			fit: L(I(o)),
+			histogram: s,
+			hoverNode: h,
+			mouseX: _,
+			cursorEv: c,
+			unstable: l
 		}));
 	}, [
-		a,
 		o,
 		s,
 		c,
-		d,
-		h,
 		l,
-		C,
-		_
+		h,
+		_,
+		d,
+		T,
+		y
 	]);
-	let w = (e) => {
+	let E = (e) => {
 		let t = e.currentTarget.getBoundingClientRect();
 		return {
-			x: t.width > 0 ? (e.clientX - t.left) * l / t.width : 0,
-			y: t.height > 0 ? (e.clientY - t.top) * C / t.height : 0
+			x: t.width > 0 ? (e.clientX - t.left) * d / t.width : 0,
+			y: t.height > 0 ? (e.clientY - t.top) * T / t.height : 0
 		};
-	}, T = (e) => {
-		e.button === 0 && (e.currentTarget.setPointerCapture?.(e.pointerId), x.current = {
-			...w(e),
+	}, ee = (e) => {
+		e.button === 0 && (e.currentTarget.setPointerCapture?.(e.pointerId), C.current = {
+			...E(e),
 			moved: !1
 		});
-	}, ee = (e) => {
-		let t = w(e), n = Et(l, C);
-		g(t.x), m(At(t.x, n));
-		let r = x.current;
+	}, D = (e) => {
+		let t = E(e), n = Et(d, T);
+		v(t.x), g(At(t.x, n));
+		let r = C.current;
 		if (!r) return;
-		let a = kt(r, t, n), o = I(i.getState().paramBag), s = te(o.bands, p(o.curveSmoothing), a.x0, a.offset);
-		s && i.getState().setDynParams(R({
+		let a = kt(r, t, n), o = I(i.getParams()), s = te(o.bands, p(o.curveSmoothing), a.x0, a.offset);
+		s && i.setParams(R({
 			...o,
 			bands: s
-		})), V().getState().setUnstable(s === null), x.current = {
+		})), u(s === null), C.current = {
 			x: t.x,
 			y: t.y,
 			moved: r.moved || s !== null
 		};
-	}, E = () => {
-		let e = x.current;
-		x.current = null, e?.moved && i.getState().commitEdit("Tone Equalizer curve");
+	}, O = () => {
+		let e = C.current;
+		C.current = null, e?.moved && i.commit("Tone Equalizer curve");
 	};
 	return B("div", {
-		ref: y,
+		ref: x,
 		style: { width: "100%" }
 	}, B("canvas", {
-		ref: b,
+		ref: S,
 		role: "img",
 		"aria-label": "Tone equalizer curve",
 		title: "Drag to shape the curve; double-click to reset it",
 		style: {
 			width: "100%",
-			height: C,
+			height: T,
 			display: "block",
 			borderRadius: 3,
 			background: z().ui.tokens.surface0 ?? "var(--color-surface-0)",
 			touchAction: "none",
 			cursor: "crosshair"
 		},
-		onPointerDown: T,
-		onPointerMove: ee,
-		onPointerUp: E,
-		onLostPointerCapture: E,
+		onPointerDown: ee,
+		onPointerMove: D,
+		onPointerUp: O,
+		onLostPointerCapture: O,
 		onPointerLeave: () => {
-			g(null), m(null);
+			v(null), g(null);
 		},
 		onDoubleClick: () => {
-			i.getState().setDynParams(R({
-				...I(i.getState().paramBag),
+			i.setParams(R({
+				...I(i.getParams()),
 				bands: f.bands
-			})), V().getState().setUnstable(!1), i.getState().commitEdit("Tone Equalizer reset curve");
+			})), u(!1), i.commit("Tone Equalizer reset curve");
 		}
 	}));
 }
@@ -1453,19 +1455,20 @@ function pn() {
 	return Jt.find((t) => t.value === e)?.value ?? "simple";
 }
 function mn() {
-	let { useEffect: e, useState: t } = z().react, { Slider: n } = z().components, { Button: r, SegmentedControl: i, Select: a, Stack: o, Toggle: s, tokens: c } = z().ui, l = z().stores.useDevelopStore, [u, d] = t(pn), p = l((e) => e.paramBag), m = V()((e) => e.probe), h = l((e) => u === "advanced" ? W(e) : ""), g = V()((e) => e.showMask), _ = V()((e) => e.adjusting), v = V()((e) => e.unstable), y = I(p), b = ln(y.details);
+	let { useEffect: e, useState: t } = z().react, { Slider: n } = z().components, { Button: r, SegmentedControl: i, Select: a, Stack: o, Toggle: s, tokens: c } = z().ui, l = z().stores.useDevelopStore, u = z().develop.useParamScope(), d = u.maskId !== null, [p, m] = t(pn), h = V()((e) => e.probe), g = l((e) => p === "advanced" && !d ? W(e) : ""), _ = V()((e) => e.showMask), v = V()((e) => e.adjusting), y = V()((e) => e.unstable) && !d, b = I(u.getParams()), x = ln(b.details);
 	e(() => {
+		if (d) return;
 		let e = ht();
 		return () => {
 			e();
 			let t = V().getState();
 			t.setShowMask(!1), t.setAdjusting(!1);
 		};
-	}, []);
-	let x = () => I(l.getState().paramBag), S = () => fn(V().getState().probe, W(l.getState())), C = (e) => {
-		V().getState().setUnstable(!1), l.getState().setDynParams(R(e));
-	}, w = (e) => void l.getState().commitEdit(`Tone Equalizer ${e}`), T = (e) => {
-		let t = on(e, e.read(y)), r = rn(e, t);
+	}, [d]);
+	let S = () => I(u.getParams()), C = () => fn(V().getState().probe, W(l.getState())), w = (e) => {
+		d || V().getState().setUnstable(!1), u.setParams(R(e));
+	}, T = (e) => u.commit(`Tone Equalizer ${e}`), E = (e) => {
+		let t = on(e, e.read(b)), r = rn(e, t);
 		return B(n, {
 			key: e.label,
 			label: e.label,
@@ -1474,8 +1477,8 @@ function mn() {
 			max: r.max,
 			step: e.step,
 			defaultValue: e.read(f),
-			onChange: (t) => C(e.write(x(), t)),
-			onCommit: () => w(e.commitLabel)
+			onChange: (t) => w(e.write(S(), t)),
+			onCommit: () => T(e.commitLabel)
 		});
 	}, ee = {
 		display: "flex",
@@ -1483,7 +1486,7 @@ function mn() {
 		gap: 3,
 		fontSize: 11,
 		color: c.textSecondary
-	}, E = (e, t, n, r, i) => B("label", {
+	}, D = (e, t, n, r, i) => B("label", {
 		key: e,
 		style: ee
 	}, e, B(a, {
@@ -1495,70 +1498,70 @@ function mn() {
 		})),
 		onChange: (e) => {
 			let t = n.find((t) => t.value === e);
-			t && (C(r(t.value)), w(i));
+			t && (w(r(t.value)), T(i));
 		}
-	})), D = (e, t, n, i) => B(r, {
+	})), O = (e, t, n, i) => B(r, {
 		size: "sm",
 		disabled: !e,
 		"aria-label": t,
 		title: e ? t : "Wait for the preview to finish recomputing",
 		onClick: () => {
-			let e = S();
+			let e = C();
 			if (!e) return;
 			let t = i(e);
-			t && (C(t), w(n));
+			t && (w(t), T(n));
 		}
-	}, "Auto"), O = (e, t) => B("div", { style: {
+	}, "Auto"), te = (e, t) => B("div", { style: {
 		display: "flex",
 		alignItems: "flex-end",
 		gap: 6
-	} }, B("div", { style: { flex: 1 } }, e), t), te = {
-		simple: () => Xt.map(T),
+	} }, B("div", { style: { flex: 1 } }, e), t), ne = {
+		simple: () => Xt.map(E),
 		advanced: () => {
-			let e = (v || !L(y).valid && y.bands.some((e) => e !== 0)) && B("p", {
+			let e = (y || !L(b).valid && b.bands.some((e) => e !== 0)) && B("p", {
 				key: "unstable",
 				style: {
 					margin: 0,
 					fontSize: 10,
 					color: "rgb(191, 128, 0)"
 				}
-			}, "The interpolation is unstable, decrease the curve smoothing"), t = fn(m, h) !== null, n = D(t, "Auto-adjust the mask exposure", "auto mask exposure", (e) => {
-				let t = x(), n = dn(oe(e.first, e.last, t.exposureBoost, t.contrastBoost));
+			}, "The interpolation is unstable, decrease the curve smoothing"), t = fn(h, g) !== null, n = O(t, "Auto-adjust the mask exposure", "auto mask exposure", (e) => {
+				let t = S(), n = dn(oe(e.first, e.last, t.exposureBoost, t.contrastBoost));
 				return n === null ? null : {
 					...t,
 					exposureBoost: n
 				};
-			}), r = D(t, "Auto-adjust the mask contrast", "auto mask contrast", (e) => {
-				let t = x(), n = dn(se(e.first, e.last, t));
+			}), r = O(t, "Auto-adjust the mask contrast", "auto mask contrast", (e) => {
+				let t = S(), n = dn(se(e.first, e.last, t));
 				return n === null ? null : {
 					...t,
 					contrastBoost: n
 				};
-			});
+			}), i = (e, t) => d ? E(e) : te(E(e), t);
 			return [
 				B(Ht, { key: "graph" }),
 				e,
-				T(Zt),
-				O(T(Qt), n),
-				b.contrast ? O(T($t), r) : null
+				E(Zt),
+				i(Qt, n),
+				x.contrast ? i($t, r) : null
 			];
 		},
 		masking: () => [
-			E("Luminance estimator", y.estimator, sn, (e) => ({
-				...x(),
+			D("Luminance estimator", b.estimator, sn, (e) => ({
+				...S(),
 				estimator: e
 			}), "luminance estimator"),
-			E("Preserve details", y.details, cn, (e) => ({
-				...x(),
+			D("Preserve details", b.details, cn, (e) => ({
+				...S(),
 				details: e
 			}), "preserve details"),
-			...b.filter ? [
-				T(en),
-				T(tn),
-				T(nn)
+			...x.filter ? [
+				E(en),
+				E(tn),
+				E(nn)
 			] : []
 		]
-	}, ne = B(a, {
+	}, k = B(a, {
 		value: "",
 		placeholder: "Preset",
 		ariaLabel: "Preset",
@@ -1568,9 +1571,9 @@ function mn() {
 		})),
 		onChange: (e) => {
 			let t = qt.find((t) => t.name === e);
-			t && (C(t.params), w(`preset ${t.name}`));
+			t && (w(t.params), T(`preset ${t.name}`));
 		}
-	}), k = {
+	}), A = {
 		margin: 0,
 		fontSize: 10,
 		lineHeight: 1.4,
@@ -1579,8 +1582,8 @@ function mn() {
 	return B(o, {
 		gap: 8,
 		style: { padding: "6px 8px 8px" }
-	}, ne, B(i, {
-		value: u,
+	}, k, B(i, {
+		value: p,
 		size: "sm",
 		options: Jt.map((e) => ({
 			value: e.value,
@@ -1588,21 +1591,21 @@ function mn() {
 		})),
 		onChange: (e) => {
 			let t = Jt.find((t) => t.value === e);
-			t && (d(t.value), z().settings.set("tab", t.value));
+			t && (m(t.value), z().settings.set("tab", t.value));
 		}
 	}), B("div", { style: {
 		display: "flex",
 		flexDirection: "column",
 		gap: 4
-	} }, ...te[u]()), B(s, {
+	} }, ...ne[p]()), d ? null : B(s, {
 		label: "Display exposure mask",
-		checked: g,
-		onChange: (e) => V().getState().setShowMask(e)
-	}), B(s, {
-		label: "Adjust on image",
 		checked: _,
+		onChange: (e) => V().getState().setShowMask(e)
+	}), d ? null : B(s, {
+		label: "Adjust on image",
+		checked: v,
 		onChange: (e) => V().getState().setAdjusting(e)
-	}), _ ? B("p", { style: k }, un) : null);
+	}), v && !d ? B("p", { style: A }, un) : null);
 }
 //#endregion
 //#region src/glsl.ts
@@ -1845,7 +1848,8 @@ function Fn() {
 			glslType: "float",
 			producer: "teMaskOut"
 		}],
-		presetScope: "global"
+		presetScope: "global",
+		mask: { maskable: !0 }
 	};
 }
 function In() {
@@ -1891,7 +1895,11 @@ function Vn(e) {
 			order: 6,
 			width: 268
 		},
-		onReset: Bn
+		onReset: Bn,
+		mask: {
+			component: mn,
+			owns: [...Ie, ...Le].map(M)
+		}
 	}), e.registerSlot({
 		id: zn,
 		slot: "develop-canvas-overlay",
@@ -1901,6 +1909,11 @@ function Vn(e) {
 		if (e.photoId !== t.photoId) {
 			let e = V().getState();
 			e.setShowMask(!1), e.setAdjusting(!1), e.setUnstable(!1);
+		}
+		if (e.params.masks !== t.params.masks) for (let n of e.params.masks) {
+			if (t.params.masks.some((e) => e.id === n.id && e.bag === n.bag)) continue;
+			let r = n.bag ? Ye(n.bag) : null;
+			r && e.updateMaskBag(n.id, r);
 		}
 		if (e.paramBag === t.paramBag) return;
 		let n = Ye(e.paramBag);

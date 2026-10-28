@@ -10,8 +10,10 @@ import type {
   CaptureOptions,
   DevelopParams,
   DevelopStoreState,
+  MaskState,
   OverlayRect,
   PanelContribution,
+  ParamScope,
   ProcessingStageContribution,
   RowProps,
   SafelightAPI,
@@ -87,7 +89,12 @@ const Slider = ({ label, value, onChange, onCommit, min, max, step }: SliderProp
   });
 
 // The core's develop params are opaque to the extension; any object stands in.
-const PARAMS = {} as DevelopParams;
+const PARAMS = { masks: [] } as unknown as DevelopParams;
+
+export const MASK_ID = "mask-1";
+
+const withMasks = (params: DevelopParams, masks: readonly MaskState[]): DevelopParams =>
+  ({ ...params, masks }) as DevelopParams;
 
 export function fakeBitmap(width = 2, height = 2, close: () => void = () => undefined): ImageBitmap {
   return { width, height, close };
@@ -113,6 +120,11 @@ export interface Rig {
   slots: SlotContribution[];
   unregisteredStages: string[];
   unregisteredSlots: string[];
+  /** Adds a mask holding `bag` and puts what renders from here on inside it, as
+   *  the core's Masking panel does. */
+  inMask(bag?: Record<string, unknown>): void;
+  /** The mask's bag as the develop store holds it now. */
+  maskBag(): Readonly<Record<string, unknown>>;
 }
 
 /** `frames` answers renderPhotoFrame and captureFrame; without it they never settle.
@@ -142,10 +154,36 @@ export function fakeApi(
     paramBag: bag,
     histogram: null,
     setDynParams: (patch) => set((s) => ({ paramBag: { ...s.paramBag, ...patch } })),
+    updateMaskBag: (maskId, patch) =>
+      set((s) => {
+        const masks = s.params.masks.map((m) => {
+          if (m.id !== maskId) return m;
+          const merged: Record<string, unknown> = { ...m.bag, ...patch };
+          for (const [key, value] of Object.entries(patch)) if (value === undefined) delete merged[key];
+          return { ...m, bag: merged };
+        });
+        return { params: withMasks(s.params, masks) };
+      }),
     commitEdit: async (label) => {
       commits.push(label);
     },
   }));
+  let masked = false;
+  const maskBag = () => develop.getState().params.masks.find((m) => m.id === MASK_ID)?.bag ?? {};
+  const photoScope: ParamScope = {
+    maskId: null,
+    getParam: (key) => develop.getState().paramBag[key],
+    getParams: () => develop.getState().paramBag,
+    setParams: (patch) => develop.getState().setDynParams(patch),
+    commit: (label) => void develop.getState().commitEdit(label),
+  };
+  const maskScope: ParamScope = {
+    maskId: MASK_ID,
+    getParam: (key) => maskBag()[key],
+    getParams: maskBag,
+    setParams: (patch) => develop.getState().updateMaskBag(MASK_ID, patch),
+    commit: (label) => void commits.push(`mask: ${label}`),
+  };
   const api: SafelightAPI = {
     version: 1,
     extensionId: "tone-equalizer",
@@ -177,7 +215,34 @@ export function fakeApi(
         renderOptions.push(options ?? {});
         return (renderFrames ?? frames ?? never)();
       },
+      // Subscribed, as the core's scopes are, so a write re-renders.
+      useParamScope: () => {
+        develop((s) => (masked ? s.params : s.paramBag));
+        return masked ? maskScope : photoScope;
+      },
     },
   };
-  return { api, develop, ui, commits, renders, renderOptions, captures, settings, overlay, stages, panels, slots, unregisteredStages, unregisteredSlots };
+  const inMask = (maskOwnBag: Record<string, unknown> = {}) => {
+    masked = true;
+    const { params } = develop.getState();
+    develop.setState({ params: withMasks(params, [...params.masks, { id: MASK_ID, bag: maskOwnBag }]) });
+  };
+  return {
+    api,
+    develop,
+    ui,
+    commits,
+    renders,
+    renderOptions,
+    captures,
+    settings,
+    overlay,
+    stages,
+    panels,
+    slots,
+    unregisteredStages,
+    unregisteredSlots,
+    inMask,
+    maskBag,
+  };
 }

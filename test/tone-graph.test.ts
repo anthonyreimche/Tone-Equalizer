@@ -164,6 +164,28 @@ describe("ToneGraph canvas", () => {
   });
 });
 
+describe("ToneGraph in a mask", () => {
+  it("drags the mask's curve, leaving the photo's alone", () => {
+    rig.inMask(deriveAll(DEFAULT_PARAMS));
+    const canvas = mount();
+    const from = { x: evToX(-4, r), y: r.y + r.h / 2 };
+    fireEvent.pointerDown(canvas, pointer(from.x, from.y));
+    fireEvent.pointerMove(canvas, pointer(from.x, from.y - r.h / 8));
+    fireEvent.pointerUp(canvas);
+    expect(readParams(rig.maskBag()).bands[4]).toBeGreaterThan(0.2);
+    expect(bandsOf()).toEqual(DEFAULT_PARAMS.bands);
+    expect(rig.commits).toEqual(["mask: Tone Equalizer curve"]);
+  });
+
+  it("draws no histogram or image cursor, which are the photo's", () => {
+    rig.inMask(deriveAll(DEFAULT_PARAMS));
+    mount();
+    act(() => store().getState().setProbe(probe()));
+    act(() => store().getState().setCursor({ ev: -2.6, local: { x: 0, y: 0 } }));
+    expect(ofOp("fill")).toHaveLength(0);
+  });
+});
+
 describe("ToneGraph gestures", () => {
   const drag = (canvas: HTMLCanvasElement, upBy: number) => {
     const from = { x: evToX(-4, r), y: r.y + r.h / 2 };

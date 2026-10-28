@@ -84,6 +84,71 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+// The same panel edits a mask in the Masking panel's Adjust tab. What
+// measures the photo or drives the canvas acts on the photo's own Tone
+// Equalizer, so it isn't there.
+describe("TonePanel in a mask", () => {
+  it("writes a band to the mask, with its GPU keys, and commits there", () => {
+    const mask = deriveAll(DEFAULT_PARAMS);
+    mountShowingInMask(mask);
+    const band = BAND_SLIDERS[4];
+    act(() => sliders.get(band.label)!.onChange(1));
+    act(() => sliders.get(band.label)!.onCommit?.());
+    expect(rig.maskBag()).toMatchObject(deriveAll({ ...DEFAULT_PARAMS, bands: [0, 0, 0, 0, 1, 0, 0, 0, 0] }));
+    expect(rig.develop.getState().paramBag).toEqual(deriveAll(DEFAULT_PARAMS));
+    expect(rig.commits).toEqual([`mask: Tone Equalizer ${band.commitLabel}`]);
+  });
+
+  it("shows the mask's values, not the photo's", () => {
+    mountShowingInMask(deriveAll({ ...DEFAULT_PARAMS, bands: [0, 0, 0, 0, 1.5, 0, 0, 0, 0] }));
+    expect(sliders.get(BAND_SLIDERS[4].label)?.value).toBe(1.5);
+  });
+
+  it("leaves out the exposure mask view, Adjust on image and the auto buttons", () => {
+    rig = fakeApi();
+    rig.settings.set(TAB_SETTING, "advanced");
+    mountInMaskKeepingRig();
+    expect(screen.queryByText("Display exposure mask")).toBeNull();
+    expect(screen.queryByText("Adjust on image")).toBeNull();
+    expect(screen.queryByLabelText("Auto-adjust the mask exposure")).toBeNull();
+    expect(screen.getByLabelText("Tone equalizer curve")).toBeTruthy();
+  });
+
+  it("never probes the photo", async () => {
+    vi.useFakeTimers();
+    rig = fakeApi(deriveAll(DEFAULT_PARAMS), () => Promise.resolve(fakeBitmap()));
+    mountInMaskKeepingRig();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200);
+    });
+    expect(rig.renders).toEqual([]);
+  });
+
+  /** Mounts in a mask with a Slider that records its props, by label. */
+  const sliders = new Map<string, SliderProps>();
+  function mountShowingInMask(maskBag: Record<string, unknown>) {
+    sliders.clear();
+    rig = fakeApi(deriveAll(DEFAULT_PARAMS));
+    rig.inMask(maskBag);
+    rig.api.components = {
+      Slider: (props: SliderProps) => {
+        sliders.set(props.label, props);
+        return null;
+      },
+    };
+    initRuntime(rig.api);
+    initStore();
+    render(React.createElement(TonePanel));
+  }
+
+  function mountInMaskKeepingRig() {
+    rig.inMask(deriveAll(DEFAULT_PARAMS));
+    initRuntime(rig.api);
+    initStore();
+    render(React.createElement(TonePanel));
+  }
+});
+
 describe("the panel's tables", () => {
   it("labels the nine bands as darktable does", () => {
     expect(BAND_SLIDERS.map((s) => s.label)).toEqual(["−8 EV", "−7 EV", "−6 EV", "−5 EV", "−4 EV", "−3 EV", "−2 EV", "−1 EV", "+0 EV"]);
