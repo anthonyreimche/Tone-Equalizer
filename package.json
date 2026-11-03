@@ -2,7 +2,7 @@
   "name": "safelight-tone-equalizer",
   "private": true,
   "version": "1.1.0",
-  "description": "Tone Equalizer extension for Safelight: a port of darktable's tone equalizer.",
+  "description": "Tone Equalizer extension for Safelight: relight the photo by exposure octave.",
   "type": "module",
   "scripts": {
     "build": "vite build",

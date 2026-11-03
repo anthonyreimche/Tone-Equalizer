@@ -1,4 +1,4 @@
-// Test scenes for the mask: functions of normalised position, so one scene
+// Test scenes for the mask: functions of normalized position, so one scene
 // renders at any size.
 
 import type { Image } from "../../src/model";
