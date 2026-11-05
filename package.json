@@ -1,7 +1,7 @@
 {
   "name": "safelight-tone-equalizer",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Tone Equalizer extension for Safelight: relight the photo by exposure octave.",
   "type": "module",
   "scripts": {

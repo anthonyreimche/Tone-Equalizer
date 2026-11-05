@@ -1,7 +1,7 @@
 {
   "id": "tone-equalizer",
   "name": "Tone Equalizer",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Tone equalizer: relight the photo by exposure octave. Nine EV sliders and a curve over the mask's histogram, scroll on the image to brighten or darken everything at that exposure, and an edge-aware exposure mask (EIGF or guided filter) that moves whole objects together.",
   "author": "Anthony Reimche",
   "main": "dist/index.js",

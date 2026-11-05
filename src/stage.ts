@@ -32,7 +32,7 @@ const int = (key: string, label?: string, range?: UniformDeclaration["range"]): 
 const vec4 = (key: string): UniformDeclaration => ({ key, glslType: "vec4", default: [0, 0, 0, 0] });
 
 /** The edit's keys: unused by the GLSL, declared so the param registry and the
- *  preset dialog know them. Ranges are in the stored (offset) units. */
+ *  preset dialogue know them. Ranges are in the stored (offset) units. */
 export const EDIT_UNIFORMS: UniformDeclaration[] = [
   ...BAND_KEYS.map((key, i) => float(key, BAND_LABELS[i], { min: -2, max: 2, step: 0.01 })),
   float("smoothing", "curve smoothing", { min: -2.33, max: 1.67, step: 0.01 }),
@@ -118,7 +118,7 @@ export function viewStage(): ProcessingStageContribution {
     space: { encoding: "perceptual", primaries: "rec709" },
     glsl: VIEW_GLSL,
     // Set only by capture patches. The host still lists it (api.params.list())
-    // and offers the stage under the Save Preset dialog's "Show all"; unlabelled
+    // and offers the stage under the Save Preset dialogue's "Show all"; unlabelled
     // and per-image, it is never offered by default or pre-selected there.
     uniforms: [{ key: "mode", glslType: "int", default: 0 }],
     consumes: [MASK_VARIABLE],
