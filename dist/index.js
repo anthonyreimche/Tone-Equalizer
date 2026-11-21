@@ -1653,7 +1653,8 @@ vec3 teState(float m) {
 float teB3(int d) { d = d < 0 ? -d : d; return d == 0 ? ${yn(0)} : (d == 1 ? ${yn(1)} : ${yn(2)}); }
 float teSpacing(int levels) {
   float sigma = ${X(l)} * max(teRadius(), 1.0);
-  return sqrt(3.0 * sigma * sigma / (exp2(2.0 * float(levels)) - 1.0));
+  float fl = float(levels);
+  return sqrt(3.0 * sigma * sigma / (exp2(2.0 * fl) - 1.0));
 }
 vec3 teBlur(vec3 centre, float spacing) {
   vec2 sum = vec2(0.0);
@@ -1669,7 +1670,8 @@ vec3 teBlur(vec3 centre, float spacing) {
 float teSpacing(int levels) {
   float r = teRadius();
   float dsr = r < 4.0 ? 1.0 : floor(r / 4.0);
-  return 4.0 * (2.0 * dsr + 1.0) / exp2(float(levels));
+  float fl = float(levels);
+  return 4.0 * (2.0 * dsr + 1.0) / exp2(fl);
 }
 vec3 teBlur(vec3 centre, float spacing) {
   float o = 0.5 * spacing;
