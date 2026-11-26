@@ -23,6 +23,17 @@ describe("activate", () => {
     deactivate();
   });
 
+  it("holds the canvas with a zoomable tool while Adjust on image is on, and lets it go after", () => {
+    const rig = fakeApi();
+    activate(rig.api);
+    expect(rig.canvasTool()).toBeNull();
+    store().getState().setAdjusting(true);
+    expect(rig.canvasTool()).toMatchObject({ zoomable: true });
+    store().getState().setAdjusting(false);
+    expect(rig.canvasTool()).toBeNull();
+    deactivate();
+  });
+
   it("offers the panel in masks, owning every edit and GPU key it writes", () => {
     const rig = fakeApi();
     activate(rig.api);

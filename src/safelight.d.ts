@@ -6,6 +6,10 @@
 
 import type { ButtonHTMLAttributes, ComponentType, CSSProperties, ReactNode } from "react";
 
+export interface ActiveIdState {
+  activeId: string;
+}
+
 export interface StoreApi<T> {
   (): T;
   <U>(selector: (state: T) => U): U;
@@ -59,6 +63,36 @@ export interface OverlayRect {
   y: number;
   w: number;
   h: number;
+}
+
+export interface OverlayRect2 {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** An extension's on-image tool that takes the canvas over while it is held. */
+export interface CanvasTool {
+  /** Drawn over the image, inside the view: `rect` is the box the frame
+   *  shows. Reads the canvas mapping with api.develop.useDevelopOverlay. */
+  overlay: ComponentType<{
+    rect: OverlayRect2;
+  }>;
+  /** Whether zoom and pan still reach the canvas under the overlay. */
+  zoomable?: boolean;
+  /** The params the live view draws while the tool is held, from the edit's
+   *  (crop mode draws the whole image past the crop). View-only: the edit is
+   *  untouched. */
+  viewParams?(params: DevelopParams): DevelopParams;
+  /** Escape was pressed: core lets the tool go after this. */
+  onEscape?(): void;
+  /** A shortcut's action (keybinding id, e.g. "brush.larger") pressed while
+   *  the tool is held: whether the tool took it. Core acts on one it didn't. */
+  onAction?(action: string): boolean;
+  /** Whether the tool would take `action` now, without acting: a key another
+   *  handler also binds (Delete) is left to the tool when it would. */
+  wants?(action: string): boolean;
 }
 
 export interface DevelopOverlayState {
@@ -143,6 +177,8 @@ export interface PanelContribution {
     width?: number;
     height?: number;
   };
+  /** The modules the panel may be docked in; omitted, every module (Safelight 3.2.8). */
+  modules?: readonly string[];
   onReset?: () => void;
   /** Offers the panel in a mask's Adjust tab: each mask that adds it renders
    *  `component`, which edits that mask's values through useParamScope. `owns`
@@ -274,6 +310,7 @@ export interface SafelightAPI {
   stores: {
     create<T>(init: StateCreator<T>): StoreApi<T>;
     useDevelopStore: StoreApi<DevelopStoreState>;
+    useThemeStore: StoreApi<ActiveIdState>;
   };
   cursors: {
     resolve(token: string): string;
@@ -288,6 +325,24 @@ export interface SafelightAPI {
       paramBag?: Record<string, unknown>,
       options?: { lossless?: boolean },
     ): Promise<ImageBitmap | null>;
+    /** Hold the develop canvas with an on-image tool (canvas-tool.ts), or with
+     *  null let go of it. While it's held, its `overlay` is drawn over the
+     *  image inside the view, core's own canvas gestures stand aside (zoom
+     *  too, unless `zoomable`), and the live view draws `viewParams` of the
+     *  edit if given. Escape calls `onEscape` and lets it go. One extension
+     *  holds it at a time: the last to set it. It is let go when the
+     *  extension stops. Needs Safelight 3.2.0. */
+    setCanvasTool(tool: CanvasTool | null): void;
+    /** React hook: whether this extension holds the canvas tool. */
+    useCanvasToolHeld(): boolean;
+    /** The pointer in `el`'s layout px: the space an overlay's `rect`, the
+     *  mapping helpers and CSS left/top use. Interface scale zooms the page,
+     *  so clientX minus the element's left is off by the zoom. Needs Safelight
+     *  3.2.7. */
+    framePoint(el: Element, clientX: number, clientY: number): {
+      x: number;
+      y: number;
+    };
     /** The mask's scope inside a mask's Adjust tab, the photo's anywhere else. */
     useParamScope(): ParamScope;
   };

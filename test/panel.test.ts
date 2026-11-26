@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { autoContrast, autoExposure, logHistogram, type LogHistogram } from "../src/measure";
 import { DEFAULT_PARAMS } from "../src/model";
 import {
-  ADJUST_HINT,
+  ADJUST_TOOLTIP,
   BAND_SLIDERS,
   CONTRAST_SLIDER,
   DIAMETER_SLIDER,
@@ -465,11 +465,11 @@ describe("what the panel says", () => {
     expect(screen.queryByText(UNSTABLE_MESSAGE)).toBeNull();
   });
 
-  it("shows the wheel hint only while adjusting on the image", () => {
+  it("explains the wheel in the adjust toggle's tooltip, never as panel text", () => {
     mount();
-    expect(screen.queryByText(ADJUST_HINT)).toBeNull();
+    expect(screen.getByLabelText("Adjust on image").closest("[title]")?.getAttribute("title")).toBe(ADJUST_TOOLTIP);
     fireEvent.click(screen.getByLabelText("Adjust on image"));
-    expect(screen.getByText(ADJUST_HINT)).toBeTruthy();
+    expect(screen.queryByText(ADJUST_TOOLTIP)).toBeNull();
   });
 });
 

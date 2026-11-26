@@ -169,7 +169,7 @@ export function visibleControls(details: Details): { filter: boolean; contrast: 
 }
 
 export const UNSTABLE_MESSAGE = "The interpolation is unstable, decrease the curve smoothing";
-export const ADJUST_HINT = "Scroll over the image to change the tone there: Shift for 1 EV steps, Alt for 0.1 EV. Esc stops.";
+export const ADJUST_TOOLTIP = "Scroll over the image to change the tone there: Shift for 1 EV steps, Alt for 0.1 EV. Esc stops.";
 
 /** An auto button's result; a non-finite one (the deciles coincide, as
  *  upstream) is null: the click is discarded. deriveAll holds the rest to the
@@ -332,8 +332,6 @@ export function TonePanel() {
     },
   });
 
-  const hintStyle: CSSProperties = { margin: 0, fontSize: 10, lineHeight: 1.4, color: tokens.textMuted };
-
   return h(
     Stack,
     { gap: 8, style: { padding: "6px 8px 8px" } },
@@ -355,7 +353,10 @@ export function TonePanel() {
       : h(Toggle, { label: "Display exposure mask", checked: showMask, onChange: (on: boolean) => store().getState().setShowMask(on) }),
     inMask
       ? null
-      : h(Toggle, { label: "Adjust on image", checked: adjusting, onChange: (on: boolean) => store().getState().setAdjusting(on) }),
-    adjusting && !inMask ? h("p", { style: hintStyle }, ADJUST_HINT) : null,
+      : h(
+          "span",
+          { title: ADJUST_TOOLTIP },
+          h(Toggle, { label: "Adjust on image", checked: adjusting, onChange: (on: boolean) => store().getState().setAdjusting(on) }),
+        ),
   );
 }

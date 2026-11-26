@@ -158,18 +158,12 @@ export function wedgePath(cx: number, cy: number, radius: number, angle: number)
   return `M ${n2(cx - radius)} ${n2(cy)} A ${radius} ${radius} 0 0 ${angle > 0 ? 1 : 0} ${n2(x1)} ${n2(y1)}`;
 }
 
-/** A pointer at (clientX, clientY) in image UV through the overlay's box and
- *  the UI zoom (`scale` = layout px per client px), or null off the image. */
-export function pointToUv(
-  clientX: number,
-  clientY: number,
-  box: { left: number; top: number },
-  scale: number,
-  rect: OverlayRect | null,
-): { x: number; y: number } | null {
+/** A frame point in image UV through the image's rect, or null off the
+ *  image. */
+export function pointToUv(point: { x: number; y: number }, rect: OverlayRect | null): { x: number; y: number } | null {
   if (!rect || rect.w <= 0 || rect.h <= 0) return null;
-  const x = ((clientX - box.left) * scale - rect.x) / rect.w;
-  const y = ((clientY - box.top) * scale - rect.y) / rect.h;
+  const x = (point.x - rect.x) / rect.w;
+  const y = (point.y - rect.y) / rect.h;
   if (x < 0 || x >= 1 || y < 0 || y >= 1) return null;
   return { x, y };
 }

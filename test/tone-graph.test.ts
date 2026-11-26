@@ -124,7 +124,7 @@ describe("ToneGraph canvas", () => {
     expect(strokes).not.toContain(ink === LIGHT_INK ? DARK_INK : LIGHT_INK);
   });
 
-  it("re-derives the ink when a theme restyles the root, and not on every redraw", async () => {
+  it("re-derives the ink when the active theme changes, and not on every redraw", async () => {
     let surface = "rgb(10, 10, 10)";
     const computed = vi
       .spyOn(window, "getComputedStyle")
@@ -136,12 +136,15 @@ describe("ToneGraph canvas", () => {
     expect(reads()).toBe(1);
     surface = "rgb(244, 244, 244)";
     calls.length = 0;
-    await act(async () => {
-      document.documentElement.setAttribute("data-theme", "ivory");
-    });
-    document.documentElement.removeAttribute("data-theme");
+    act(() => rig.theme.setState({ activeId: "ivory" }));
     expect(reads()).toBe(2);
     expect(ofOp("stroke").map((c) => c.strokeStyle)).toContain(LIGHT_INK);
+  });
+
+  it("does not watch the document's attributes for theme changes", () => {
+    const observe = vi.spyOn(MutationObserver.prototype, "observe");
+    mount();
+    expect(observe).not.toHaveBeenCalled();
   });
 
   it("sizes the backing store by the device pixel ratio and draws in layout px", () => {

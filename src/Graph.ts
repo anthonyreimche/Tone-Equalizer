@@ -196,15 +196,14 @@ export function ToneGraph() {
     return () => ro.disconnect();
   }, []);
 
-  // Themes restyle the root's CSS variables in place; watch the root so the
-  // ink re-derives without waiting for the next interaction.
-  useEffect(() => {
-    const bump = () => setEpoch((n) => n + 1);
-    const mo = new MutationObserver(bump);
-    mo.observe(document.documentElement, { attributes: true });
-    mo.observe(document.body, { attributes: true });
-    return () => mo.disconnect();
-  }, []);
+  // The theme writes its CSS variables before it sets the id.
+  useEffect(
+    () =>
+      api().stores.useThemeStore.subscribe((state, previous) => {
+        if (state.activeId !== previous.activeId) setEpoch((n) => n + 1);
+      }),
+    [],
+  );
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -285,7 +284,7 @@ export function ToneGraph() {
         borderRadius: 3,
         background: api().ui.tokens.surface0 ?? "var(--color-surface-0)",
         touchAction: "none",
-        cursor: "crosshair",
+        cursor: api().cursors.resolve("crosshair"),
       },
       onPointerDown,
       onPointerMove,

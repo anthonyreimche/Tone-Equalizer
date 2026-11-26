@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-// The develop-canvas overlay: Adjust on image reads the mask exposure under
+// The develop canvas's overlays: Adjust on image reads the mask exposure under
 // the pointer from the probe, the wheel shifts the curve there and commits
-// once the wheel settles, Ctrl+wheel stays the canvas zoom, Esc leaves; the
+// once the wheel settles, Ctrl+wheel stays the canvas zoom, core's Esc leaves; the
 // mask display captures with the view stage's mode 1.
 
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -9,7 +9,7 @@ import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { interactiveEdit } from "../src/curve";
 import { DEFAULT_PARAMS } from "../src/model";
-import { COMMIT_DELAY_MS, ToneEqualizerOverlay } from "../src/Overlay";
+import { ADJUST_TOOL, AdjustTool, COMMIT_DELAY_MS, ToneEqualizerOverlay } from "../src/Overlay";
 import { VIEW_MODE_KEY, deriveAll, readParams } from "../src/params";
 import { maskViewPatch } from "../src/readback";
 import { initRuntime } from "../src/runtime";
@@ -25,13 +25,20 @@ function probe() {
   return { width: 4, height: 4, ev: new Float32Array(16).fill(-3), histogram: null, signature: "" };
 }
 
+/** The slot's layers and the canvas tool's overlay, as core draws them together. */
+function Canvas() {
+  const rect = { x: 0, y: 0, w: 200, h: 100 };
+  return React.createElement(React.Fragment, null, React.createElement(ToneEqualizerOverlay), React.createElement(AdjustTool, { rect }));
+}
+
 function mount(frames?: () => Promise<ImageBitmap>) {
   rig = fakeApi(deriveAll(DEFAULT_PARAMS), frames);
   rig.overlay.rect = { x: 0, y: 0, w: 200, h: 100 };
   initRuntime(rig.api);
   initStore();
   store().getState().setProbe(probe());
-  return render(React.createElement(ToneEqualizerOverlay));
+  rig.api.develop.setCanvasTool(ADJUST_TOOL);
+  return render(React.createElement(Canvas));
 }
 
 /** jsdom has no layout: give the adjust layer a box and a layout width. */
@@ -92,13 +99,6 @@ describe("Adjust on image", () => {
     expect(wheel.defaultPrevented).toBe(false);
     expect(readParams(rig.develop.getState().paramBag).bands.every((b) => b === 0)).toBe(true);
   });
-
-  it("stops on Esc", () => {
-    mount();
-    act(() => store().getState().setAdjusting(true));
-    fireEvent.keyDown(window, { key: "Escape" });
-    expect(store().getState().adjusting).toBe(false);
-  });
 });
 
 describe("Display exposure mask", () => {
@@ -123,7 +123,7 @@ describe("Display exposure mask", () => {
       await vi.advanceTimersByTimeAsync(200);
     });
     rig.overlay.nonce = 1;
-    view.rerender(React.createElement(ToneEqualizerOverlay));
+    view.rerender(React.createElement(Canvas));
     expect(screen.queryByTestId("te-mask")).toBeNull();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(200);
@@ -169,7 +169,7 @@ describe("Adjust on image, the details", () => {
     const ev = Float32Array.from({ length: columns * 4 }, (_, k) => (k % columns < columns / 2 ? -6 : -1));
     act(() => store().getState().setProbe({ width: columns, height: 4, ev, histogram: null, signature: "" }));
     rig.overlay.imageRect = { x: -200, y: 0, w: 800, h: 100 };
-    view.rerender(React.createElement(ToneEqualizerOverlay));
+    view.rerender(React.createElement(Canvas));
     const layer = adjustLayer();
     fireEvent.pointerMove(layer, { clientX: 100, clientY: 50 });
     expect(store().getState().cursor?.ev).toBeCloseTo(-6, 6);
@@ -178,7 +178,7 @@ describe("Adjust on image, the details", () => {
   it("gives no reading before the image has a rect, and leaves the wheel alone", () => {
     const view = mount();
     rig.overlay.imageRect = null;
-    view.rerender(React.createElement(ToneEqualizerOverlay));
+    view.rerender(React.createElement(Canvas));
     const layer = adjustLayer();
     fireEvent.pointerMove(layer, { clientX: 100, clientY: 50 });
     expect(store().getState().cursor?.ev).toBeNull();
@@ -320,43 +320,31 @@ describe("Adjust on image, the details", () => {
     expect(rig.commits).toEqual([]);
   });
 
-  it("goes click-through while Ctrl, ⌘ or Space is held", () => {
-    mount();
-    const layer = adjustLayer();
-    expect(layer.style.pointerEvents).toBe("auto");
-    for (const key of ["Control", "Meta", " "]) {
-      fireEvent.keyDown(window, { key });
-      expect(layer.style.pointerEvents).toBe("none");
-      fireEvent.keyUp(window, { key });
-      expect(layer.style.pointerEvents).toBe("auto");
+  it("is zoomable and listens to no key: core hands Ctrl, Cmd and Space to the canvas", () => {
+    expect(ADJUST_TOOL.zoomable).toBe(true);
+    const add = vi.spyOn(window, "addEventListener");
+    try {
+      mount();
+      adjustLayer();
+      expect(add.mock.calls.filter(([type]) => type === "keydown" || type === "keyup" || type === "blur")).toEqual([]);
+    } finally {
+      add.mockRestore();
     }
-    fireEvent.keyDown(window, { key: "Control" });
-    fireEvent.blur(window);
-    expect(layer.style.pointerEvents).toBe("auto");
   });
 
-  it("removes the layer and the cursor on Esc", () => {
+  it("removes the layer and the cursor on core's Escape", () => {
     mount();
     const layer = adjustLayer();
     fireEvent.pointerMove(layer, { clientX: 100, clientY: 50 });
-    fireEvent.keyDown(window, { key: "Escape" });
+    act(() => ADJUST_TOOL.onEscape?.());
     expect(screen.queryByTestId("te-adjust")).toBeNull();
     expect(store().getState().cursor).toBeNull();
   });
 
-  it("keeps adjusting when the host already used the Esc", () => {
+  it("stops adjusting when another extension takes the canvas", () => {
     mount();
     adjustLayer();
-    const hostUsesEsc = (e: KeyboardEvent) => e.preventDefault();
-    window.addEventListener("keydown", hostUsesEsc, true);
-    try {
-      fireEvent.keyDown(document.body, { key: "Escape" });
-    } finally {
-      window.removeEventListener("keydown", hostUsesEsc, true);
-    }
-    expect(store().getState().adjusting).toBe(true);
-    expect(screen.getByTestId("te-adjust")).toBeTruthy();
-    fireEvent.keyDown(document.body, { key: "Escape" });
+    act(() => rig.releaseCanvasTool());
     expect(store().getState().adjusting).toBe(false);
   });
 
@@ -526,7 +514,7 @@ describe("Display exposure mask, the frames it holds", () => {
     expect(f.issued).toHaveLength(1);
     expect(f.closed).toEqual([]);
     rig.overlay.nonce = 1;
-    view.rerender(React.createElement(ToneEqualizerOverlay));
+    view.rerender(React.createElement(Canvas));
     await settle();
     expect(f.issued).toHaveLength(2);
     expect(f.closed).toEqual([f.issued[0]]);

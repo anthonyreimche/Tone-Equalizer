@@ -6,7 +6,9 @@
 import * as React from "react";
 import { create } from "zustand";
 import type {
+  ActiveIdState,
   ButtonProps,
+  CanvasTool,
   CaptureOptions,
   DevelopParams,
   DevelopStoreState,
@@ -103,6 +105,7 @@ export function fakeBitmap(width = 2, height = 2, close: () => void = () => unde
 export interface Rig {
   api: SafelightAPI;
   develop: StoreApi<DevelopStoreState>;
+  theme: StoreApi<ActiveIdState>;
   ui: UiKit;
   commits: string[];
   /** The paramBag of each renderPhotoFrame call. */
@@ -112,6 +115,10 @@ export interface Rig {
   /** The options of each captureFrame call. */
   captures: CaptureOptions[];
   settings: Map<string, unknown>;
+  /** The canvas tool the extension holds, or null. */
+  canvasTool(): CanvasTool | null;
+  /** Another extension takes the canvas: the held tool is let go. */
+  releaseCanvasTool(): void;
   /** What useDevelopOverlay returns; tests change it and re-render. `imageRect`
    *  follows `rect` until a test sets it. */
   overlay: { rect: OverlayRect | null; imageRect?: OverlayRect | null; nonce: number };
@@ -145,6 +152,8 @@ export function fakeApi(
   const slots: SlotContribution[] = [];
   const unregisteredStages: string[] = [];
   const unregisteredSlots: string[] = [];
+  const canvas = create<{ held: CanvasTool | null }>()(() => ({ held: null }));
+  const theme = create<ActiveIdState>()(() => ({ activeId: "safelight-neutral" }));
   const never = () => new Promise<ImageBitmap>(() => undefined);
   const develop: StoreApi<DevelopStoreState> = create<DevelopStoreState>()((set) => ({
     photoId: "p1",
@@ -202,9 +211,17 @@ export function fakeApi(
     stores: {
       create: <T,>(init: StateCreator<T>) => create<T>()(init),
       useDevelopStore: develop,
+      useThemeStore: theme,
     },
     cursors: { resolve: (token) => token },
     develop: {
+      useCanvasToolHeld: () => canvas((s) => s.held !== null),
+      setCanvasTool: (tool) => canvas.setState({ held: tool }),
+      framePoint: (el, clientX, clientY) => {
+        const box = el.getBoundingClientRect();
+        const scale = box.width > 0 && el.clientWidth > 0 ? el.clientWidth / box.width : 1;
+        return { x: (clientX - box.left) * scale, y: (clientY - box.top) * scale };
+      },
       useDevelopOverlay: () => ({ rect: overlay.rect, imageRect: overlay.imageRect === undefined ? overlay.rect : overlay.imageRect, nonce: overlay.nonce }),
       captureFrame: (_params, options) => {
         captures.push(options ?? {});
@@ -230,6 +247,7 @@ export function fakeApi(
   return {
     api,
     develop,
+    theme,
     ui,
     commits,
     renders,
@@ -237,6 +255,8 @@ export function fakeApi(
     captures,
     settings,
     overlay,
+    canvasTool: () => canvas.getState().held,
+    releaseCanvasTool: () => canvas.setState({ held: null }),
     stages,
     panels,
     slots,

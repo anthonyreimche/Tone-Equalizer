@@ -3,10 +3,10 @@
 // A port of darktable's tone equalizer (© Aurélien Pierre and the darktable
 // authors): relight the photo by exposure octave over an edge-aware exposure
 // mask. Registers the scene-linear correction stage and the output-encode
-// mask view (stage.ts), the Develop panel (Panel.ts) and the canvas overlay
+// mask view (stage.ts), the Develop panel (Panel.ts) and the canvas overlays
 // (Overlay.ts).
 
-import { ToneEqualizerOverlay } from "./Overlay";
+import { ToneEqualizerOverlay, holdAdjustTool } from "./Overlay";
 import { TonePanel } from "./Panel";
 import { DERIVED_KEYS, EDIT_KEYS, EXT_ID, qualified, rederivePatch, resetPatch } from "./params";
 import { api, initRuntime } from "./runtime";
@@ -18,6 +18,7 @@ const PANEL_ID = `${EXT_ID}.panel`;
 const OVERLAY_ID = `${EXT_ID}.overlay`;
 
 let unsubscribe: (() => void) | null = null;
+let releaseTool: (() => void) | null = null;
 
 function reset(): void {
   const dev = api().stores.useDevelopStore.getState();
@@ -38,6 +39,7 @@ export function activate(host: SafelightAPI): void {
     title: "Tone Equalizer",
     component: TonePanel,
     defaultDock: { module: "develop", direction: "right", order: 6, width: 268 },
+    modules: ["develop"],
     onReset: reset,
     // The same panel edits a mask's Tone Equalizer in the Masking panel's
     // Adjust tab; the GPU reads only the derived keys, so it owns those too.
@@ -47,6 +49,8 @@ export function activate(host: SafelightAPI): void {
   host.registerSlot({ id: OVERLAY_ID, slot: "develop-canvas-overlay", component: ToneEqualizerOverlay, order: 55 });
 
   unsubscribe?.();
+  releaseTool?.();
+  releaseTool = holdAdjustTool();
   // A bag whose GPU keys disagree with its edit (a preset that carried only
   // some keys, an edit from another release) is re-derived live, the photo's
   // and each mask's.
@@ -79,5 +83,7 @@ export function deactivate(): void {
   unsubscribe = null;
   const ui = store().getState();
   ui.setAdjusting(false);
+  releaseTool?.();
+  releaseTool = null;
   ui.setShowMask(false);
 }

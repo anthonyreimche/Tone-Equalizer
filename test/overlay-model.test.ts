@@ -166,15 +166,14 @@ describe("the cursor's geometry (gui/draw.h dt_draw_correction_cursor, zoom 1)",
 
 describe("pointToUv", () => {
   const rect = { x: 10, y: 20, w: 200, h: 100 };
-  const box = { left: 100, top: 50, width: 400, height: 300 };
 
-  it("maps a pointer through the UI zoom to the image rect", () => {
-    expect(pointToUv(210, 120, box, 1, rect)).toEqual({ x: 0.5, y: 0.5 });
-    expect(pointToUv(160, 95, box, 2, rect)).toEqual({ x: 0.55, y: 0.7 });
+  it("maps a frame point to the image rect", () => {
+    expect(pointToUv({ x: 110, y: 70 }, rect)).toEqual({ x: 0.5, y: 0.5 });
+    expect(pointToUv({ x: 60, y: 90 }, rect)).toEqual({ x: 0.25, y: 0.7 });
   });
 
   it("is null off the image or without a rect", () => {
-    expect(pointToUv(100, 50, box, 1, rect)).toBeNull();
-    expect(pointToUv(210, 120, box, 1, null)).toBeNull();
+    expect(pointToUv({ x: 5, y: 70 }, rect)).toBeNull();
+    expect(pointToUv({ x: 110, y: 70 }, null)).toBeNull();
   });
 });

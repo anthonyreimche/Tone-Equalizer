@@ -343,12 +343,12 @@ function be(e) {
 function xe(e) {
 	return Math.min(Math.max(.5 * e, -1), 1) * (Math.PI / 2);
 }
-var j = (e) => (Math.abs(e) < .005 ? 0 : e).toFixed(2);
-function Se(e, t) {
+var Se = (e) => (Math.abs(e) < .005 ? 0 : e).toFixed(2);
+function Ce(e, t) {
 	return e === null || !t.valid ? 0 : Math.log2(D(e, t));
 }
-var Ce = 4, we = 1.5, Te = .9, Ee = .8;
-function De(e, t) {
+var we = 4, Te = 1.5, Ee = .9, De = .8;
+function Oe(e, t) {
 	return [
 		{
 			x1: e + 16,
@@ -376,33 +376,33 @@ function De(e, t) {
 		}
 	];
 }
-function Oe(e, t, n, r) {
+function ke(e, t, n, r) {
 	let i = e + 16 + 8, a = r + 8;
 	return {
 		x: i,
 		y: t - a / 2,
 		width: n + 8,
 		height: a,
-		textX: i + Ce,
+		textX: i + we,
 		textY: t
 	};
 }
-function ke(e, t, n, r) {
+function Ae(e, t, n, r) {
 	if (r === 0) return "";
 	let i = e + n * Math.cos(Math.PI + r), a = t + n * Math.sin(Math.PI + r);
-	return `M ${j(e - n)} ${j(t)} A ${n} ${n} 0 0 ${+(r > 0)} ${j(i)} ${j(a)}`;
+	return `M ${Se(e - n)} ${Se(t)} A ${n} ${n} 0 0 ${+(r > 0)} ${Se(i)} ${Se(a)}`;
 }
-function Ae(e, t, n, r, i) {
-	if (!i || i.w <= 0 || i.h <= 0) return null;
-	let a = ((e - n.left) * r - i.x) / i.w, o = ((t - n.top) * r - i.y) / i.h;
-	return a < 0 || a >= 1 || o < 0 || o >= 1 ? null : {
-		x: a,
-		y: o
+function je(e, t) {
+	if (!t || t.w <= 0 || t.h <= 0) return null;
+	let n = (e.x - t.x) / t.w, r = (e.y - t.y) / t.h;
+	return n < 0 || n >= 1 || r < 0 || r >= 1 ? null : {
+		x: n,
+		y: r
 	};
 }
 //#endregion
 //#region src/params.ts
-var je = "tone-equalizer", Me = `${je}.correction`, Ne = `${je}.mask-view`, Pe = "toneEqualizerMask", Fe = [
+var Me = "tone-equalizer", Ne = `${Me}.correction`, Pe = `${Me}.mask-view`, Fe = "toneEqualizerMask", j = [
 	"b0",
 	"b1",
 	"b2",
@@ -413,7 +413,7 @@ var je = "tone-equalizer", Me = `${je}.correction`, Ne = `${je}.mask-view`, Pe =
 	"b7",
 	"b8"
 ], Ie = [
-	...Fe,
+	...j,
 	"smoothing",
 	"exposureBoost",
 	"contrastBoost",
@@ -441,9 +441,9 @@ var je = "tone-equalizer", Me = `${je}.correction`, Ne = `${je}.mask-view`, Pe =
 	"fNorm"
 ];
 function M(e) {
-	return `${Me}.${e}`;
+	return `${Ne}.${e}`;
 }
-var Re = M("probe"), ze = `${Ne}.mode`, N = {
+var Re = M("probe"), ze = `${Pe}.mode`, N = {
 	band: {
 		min: -2,
 		max: 2
@@ -480,7 +480,7 @@ function Be(e, t, n) {
 function I(e) {
 	let t = (t, n, r) => P(n + (F(e, t) ?? 0), r);
 	return {
-		bands: Fe.map((t) => P(F(e, t) ?? 0, N.band)),
+		bands: j.map((t) => P(F(e, t) ?? 0, N.band)),
 		curveSmoothing: P(F(e, "smoothing") ?? 0, N.smoothing),
 		exposureBoost: P(F(e, "exposureBoost") ?? 0, N.boost),
 		contrastBoost: P(F(e, "contrastBoost") ?? 0, N.boost),
@@ -493,7 +493,7 @@ function I(e) {
 }
 function Ve(e) {
 	let t = {};
-	return Fe.forEach((n, r) => {
+	return j.forEach((n, r) => {
 		t[M(n)] = e.bands[r];
 	}), t[M("smoothing")] = e.curveSmoothing, t[M("exposureBoost")] = e.exposureBoost, t[M("contrastBoost")] = e.contrastBoost, t[M("details")] = u.indexOf(e.details), t[M("estimator")] = d.indexOf(e.estimator), t[M("diffusion")] = e.iterations - f.iterations, t[M("diameter")] = e.blending - f.blending, t[M("feathering")] = e.feathering - f.feathering, t;
 }
@@ -682,7 +682,7 @@ function ut(e) {
 	let t = lt.get(e);
 	return t === void 0 && (t = ct(e), lt.set(e, t)), t;
 }
-var dt = `${Me}.`;
+var dt = `${Ne}.`;
 function W(e) {
 	let t = U(e), n = {};
 	for (let [e, r] of Object.entries(t)) !e.startsWith(dt) && e !== ze && (n[e] = r);
@@ -742,12 +742,12 @@ function ht() {
 }
 var gt = "Tone Equalizer scroll", _t = "tone-equalizer-hatch", vt = 10, yt = 6;
 function bt(e) {
-	let t = z().react.useMemo(() => L(I(e.paramBag)), [e.paramBag]), { x: n, y: r } = e.cursor.local, i = e.cursor.ev, a = i === null ? 0 : 2 ** i, o = Se(i, t), s = a * 2 ** o, c = be(s), l = (e, t) => B("line", {
+	let t = z().react.useMemo(() => L(I(e.paramBag)), [e.paramBag]), { x: n, y: r } = e.cursor.local, i = e.cursor.ev, a = i === null ? 0 : 2 ** i, o = Ce(i, t), s = a * 2 ** o, c = be(s), l = (e, t) => B("line", {
 		key: t,
 		...e,
 		style: {
 			stroke: c,
-			strokeWidth: we
+			strokeWidth: Te
 		}
 	}), u = (e, t, i) => [
 		B("circle", {
@@ -757,7 +757,7 @@ function bt(e) {
 			r: e,
 			style: {
 				fill: ye(t),
-				fillOpacity: Te
+				fillOpacity: Ee
 			}
 		}),
 		t > 1 ? B("circle", {
@@ -778,7 +778,7 @@ function bt(e) {
 				strokeWidth: 1
 			}
 		})
-	], d = _e(i), f = Oe(n, r, yt * d.length, vt);
+	], d = _e(i), f = ke(n, r, yt * d.length, vt);
 	return B("svg", { style: {
 		position: "absolute",
 		left: 0,
@@ -803,18 +803,18 @@ function bt(e) {
 			strokeWidth: 1
 		}
 	}))), B("path", {
-		d: ke(n, r, 32, xe(o)),
+		d: Ae(n, r, 32, xe(o)),
 		style: {
 			fill: "none",
 			stroke: c,
 			strokeWidth: 8
 		}
-	}), ...De(n, r).map(l), ...u(16, a, "before"), ...u(8, s, "after"), B("rect", {
+	}), ...Oe(n, r).map(l), ...u(16, a, "before"), ...u(8, s, "after"), B("rect", {
 		x: f.x,
 		y: f.y,
 		width: f.width,
 		height: f.height,
-		style: { fill: `rgba(0, 0, 0, ${Ee})` }
+		style: { fill: `rgba(0, 0, 0, ${De})` }
 	}), B("text", {
 		x: f.textX,
 		y: f.textY,
@@ -826,80 +826,58 @@ function bt(e) {
 		}
 	}, d));
 }
-function xt() {
-	let { useEffect: e, useRef: t, useState: n } = z().react, r = V()((e) => e.adjusting), i = V()((e) => e.cursor), a = z().stores.useDevelopStore, o = a((e) => e.paramBag), s = z().develop.useDevelopOverlay(), c = t(null), [l, u] = n(!1), [d] = n(ge), f = t(null), m = t(!1);
-	e(() => {
-		if (!r) return;
-		let e = /* @__PURE__ */ new Set(), t = () => u(e.has("Control") || e.has("Meta") || e.has(" ")), n = (n) => {
-			if (n.key === "Escape") {
-				n.defaultPrevented || V().getState().setAdjusting(!1);
-				return;
-			}
-			e.add(n.key), t();
-		}, i = (n) => {
-			e.delete(n.key), t();
-		}, a = () => {
-			e.clear(), t();
-		};
-		return window.addEventListener("keydown", n), window.addEventListener("keyup", i), window.addEventListener("blur", a), () => {
-			window.removeEventListener("keydown", n), window.removeEventListener("keyup", i), window.removeEventListener("blur", a), u(!1);
-		};
-	}, [r]);
-	let h = () => {
-		f.current = null, d.reset(), m.current && (m.current = !1, a.getState().commitEdit(gt));
+function xt(e) {
+	let { useEffect: t, useRef: n, useState: r } = z().react, i = V()((e) => e.adjusting), a = V()((e) => e.cursor), o = z().stores.useDevelopStore, s = o((e) => e.paramBag), c = z().develop.useDevelopOverlay(), l = n(null), [u] = r(ge), d = n(null), f = n(!1), m = () => {
+		d.current = null, u.reset(), f.current && (f.current = !1, o.getState().commitEdit(gt));
+	}, h = () => {
+		d.current !== null && clearTimeout(d.current), d.current = setTimeout(m, 400);
 	}, g = () => {
-		f.current !== null && clearTimeout(f.current), f.current = setTimeout(h, 400);
-	}, _ = () => {
-		f.current !== null && (clearTimeout(f.current), h());
+		d.current !== null && (clearTimeout(d.current), m());
 	};
-	e(() => _, []);
-	let v = (e, t) => {
-		let n = I(a.getState().paramBag), r = te(n.bands, p(n.curveSmoothing), e, t);
-		return V().getState().setUnstable(r === null), r ? (a.getState().setDynParams(R({
+	t(() => g, []);
+	let _ = (e, t) => {
+		let n = I(o.getState().paramBag), r = te(n.bands, p(n.curveSmoothing), e, t);
+		return V().getState().setUnstable(r === null), r ? (o.getState().setDynParams(R({
 			...n,
 			bands: r
-		})), m.current = !0, !0) : !1;
+		})), f.current = !0, !0) : !1;
 	};
-	return e(() => {
-		let e = c.current;
-		if (!e || !r) return;
+	return t(() => {
+		let e = l.current;
+		if (!e || !i) return;
 		let t = (e) => {
 			if (e.ctrlKey || e.metaKey) return;
 			let t = V().getState().cursor;
 			if (!t || t.ev === null || e.deltaX === 0 && e.deltaY === 0) return;
-			e.preventDefault(), e.stopPropagation(), g();
-			let n = d.push(e), r = Math.sign(n) * fe(e);
-			for (let e = 0; e < Math.abs(n) && v(t.ev, r); e++);
+			e.preventDefault(), e.stopPropagation(), h();
+			let n = u.push(e), r = Math.sign(n) * fe(e);
+			for (let e = 0; e < Math.abs(n) && _(t.ev, r); e++);
 		};
 		return e.addEventListener("wheel", t, { passive: !1 }), () => e.removeEventListener("wheel", t);
-	}, [r]), r ? B("div", {
-		ref: c,
+	}, [i]), i ? B("div", {
+		ref: l,
 		"data-testid": "te-adjust",
 		style: {
 			position: "absolute",
 			inset: 0,
-			pointerEvents: l ? "none" : "auto",
-			cursor: i ? "none" : z().cursors.resolve("crosshair")
+			cursor: a ? "none" : z().cursors.resolve("crosshair")
 		},
 		onPointerMove: (e) => {
-			let t = e.currentTarget, n = t.getBoundingClientRect(), r = n.width > 0 && t.clientWidth > 0 ? t.clientWidth / n.width : 1, i = s.imageRect, a = Ae(e.clientX, e.clientY, n, r, i);
-			if (i && !a) {
+			let t = z().develop.framePoint(e.currentTarget, e.clientX, e.clientY), n = c.imageRect, r = je(t, n);
+			if (n && !r) {
 				V().getState().setCursor(null);
 				return;
 			}
-			let o = V().getState().probe, c = a && o ? le(o.ev, o.width, o.height, Math.min(o.width - 1, Math.floor(a.x * o.width)), Math.min(o.height - 1, Math.floor(a.y * o.height))) : null;
+			let i = V().getState().probe, a = r && i ? le(i.ev, i.width, i.height, Math.min(i.width - 1, Math.floor(r.x * i.width)), Math.min(i.height - 1, Math.floor(r.y * i.height))) : null;
 			V().getState().setCursor({
-				ev: c,
-				local: {
-					x: (e.clientX - n.left) * r,
-					y: (e.clientY - n.top) * r
-				}
+				ev: a,
+				local: t
 			});
 		},
 		onPointerLeave: () => V().getState().setCursor(null)
-	}, i ? B(bt, {
-		cursor: i,
-		paramBag: o
+	}, a ? B(bt, {
+		cursor: a,
+		paramBag: s
 	}) : null) : null;
 }
 function St() {
@@ -949,11 +927,27 @@ function St() {
 	});
 }
 function Ct() {
+	let { useEffect: e } = z().react, t = V()((e) => e.adjusting), n = z().develop.useCanvasToolHeld();
+	return e(() => {
+		t && !n && V().getState().setAdjusting(!1);
+	}, [t, n]), null;
+}
+var wt = {
+	overlay: xt,
+	zoomable: !0,
+	onEscape: () => V().getState().setAdjusting(!1)
+};
+function Tt() {
+	return V().subscribe((e, t) => {
+		e.adjusting !== t.adjusting && z().develop.setCanvasTool(e.adjusting ? wt : null);
+	});
+}
+function Et() {
 	return B("div", { style: {
 		position: "absolute",
 		inset: 0,
 		pointerEvents: "none"
-	} }, B(St, null), B(xt, null));
+	} }, B(St, null), B(Ct, null));
 }
 //#endregion
 //#region src/graph-model.ts
@@ -962,11 +956,11 @@ var G = {
 	right: 22,
 	top: 14,
 	bottom: 6
-}, wt = 8;
-function Tt(e) {
+}, Dt = 8;
+function Ot(e) {
 	return Math.round(Math.min(Math.max(.75 * e, 160), 280));
 }
-function Et(e, t) {
+function kt(e, t) {
 	return {
 		x: G.left,
 		y: G.top,
@@ -974,51 +968,51 @@ function Et(e, t) {
 		h: Math.max(1, t - G.top - G.bottom)
 	};
 }
-function Dt(e, t) {
-	return t.x + (e - -8) / wt * t.w;
+function At(e, t) {
+	return t.x + (e - -8) / Dt * t.w;
 }
-function Ot(e, t) {
-	return -8 + (e - t.x) / t.w * wt;
+function jt(e, t) {
+	return -8 + (e - t.x) / t.w * Dt;
 }
 function K(e, t) {
 	return t.y + (.5 - e / 4) * t.h;
 }
-function kt(e, t, n) {
+function Mt(e, t, n) {
 	return {
-		x0: Ot(e.x, n),
+		x0: jt(e.x, n),
 		offset: (e.y - t.y) / n.h * 4
 	};
 }
-function At(t, n) {
+function Nt(t, n) {
 	let r = n.w / (e.length - 1), i = Math.round((t - n.x) / r) + 0;
 	return i < 0 || i >= e.length ? null : Math.abs(t - (n.x + i * r)) <= .45 * r ? i : null;
 }
-function jt(t) {
+function Pt(t) {
 	let n = Math.round(t - -8) + 0;
 	return n < 0 || n >= e.length ? null : Math.abs(t - e[n]) <= .45 ? n : null;
 }
-function Mt(e, t) {
-	return e / Math.SQRT2 / wt * t.w;
+function Ft(e, t) {
+	return e / Math.SQRT2 / Dt * t.w;
 }
-function Nt(e, t) {
+function It(e, t) {
 	return Array.from(e.bins, (n) => n / e.max * .96 * t.h);
 }
-function Pt(e) {
+function Lt(e) {
 	return {
 		highlights: e.last > -.1,
 		shadows: e.first < -7.9
 	};
 }
-function Ft(e, t) {
+function Rt(e, t) {
 	return {
-		x: Dt(Math.min(Math.max(e, -8), 0), t),
+		x: At(Math.min(Math.max(e, -8), 0), t),
 		outside: e < -8 || e > 0
 	};
 }
 //#endregion
 //#region src/Graph.ts
-var It = "rgb(191, 128, 0)";
-function Lt(e) {
+var zt = "rgb(191, 128, 0)";
+function Bt(e) {
 	let t = getComputedStyle(e).backgroundColor.match(/\d+(?:\.\d+)?/g);
 	return !t || (Number(t[0]) + Number(t[1]) + Number(t[2])) / 765 < .5 ? {
 		fg: "rgba(235, 235, 235, 0.92)",
@@ -1030,18 +1024,18 @@ function Lt(e) {
 		fill: "rgba(25, 25, 25, 0.14)"
 	};
 }
-var Rt = (e) => e === 0 ? "+0" : `−${-e}`, zt = (e) => e > 0 ? `+${e}` : e < 0 ? `−${-e}` : "0";
-function Bt(e, t, n) {
+var Vt = (e) => e === 0 ? "+0" : `−${-e}`, Ht = (e) => e > 0 ? `+${e}` : e < 0 ? `−${-e}` : "0";
+function Ut(e, t, n) {
 	e.beginPath(), e.moveTo(t, n - 4), e.lineTo(t + 4, n + 3), e.lineTo(t - 4, n + 3), e.closePath(), e.fill();
 }
-function Vt(t, n, r, i, a) {
-	let o = Et(n, r), s = (e, n, r, i) => {
+function Wt(t, n, r, i, a) {
+	let o = kt(n, r), s = (e, n, r, i) => {
 		t.beginPath(), t.moveTo(e, n), t.lineTo(r, i), t.stroke();
 	};
 	t.clearRect(0, 0, n, r), t.font = "9px sans-serif", t.strokeStyle = i.faint, t.lineWidth = 1;
 	for (let e = 0; e <= 8; e++) s(o.x + e / 8 * o.w, o.y, o.x + e / 8 * o.w, o.y + o.h), s(o.x, o.y + e / 8 * o.h, o.x + o.w, o.y + e / 8 * o.h);
 	t.fillStyle = i.fg, t.textAlign = "center", t.textBaseline = "bottom";
-	for (let n of e) t.fillText(Rt(n), Dt(n, o), o.y - 2);
+	for (let n of e) t.fillText(Vt(n), At(n, o), o.y - 2);
 	t.textAlign = "left", t.textBaseline = "middle";
 	for (let e of [
 		2,
@@ -1049,36 +1043,36 @@ function Vt(t, n, r, i, a) {
 		0,
 		-1,
 		-2
-	]) t.fillText(zt(e), o.x + o.w + 3, K(e, o));
+	]) t.fillText(Ht(e), o.x + o.w + 3, K(e, o));
 	if (a.histogram) {
-		let e = Nt(a.histogram, o), n = o.y + o.h;
+		let e = It(a.histogram, o), n = o.y + o.h;
 		t.fillStyle = i.fill, t.beginPath(), t.moveTo(o.x, n), e.forEach((r, i) => t.lineTo(o.x + i / (e.length - 1) * o.w, n - r)), t.lineTo(o.x + o.w, n), t.closePath(), t.fill();
-		let r = Pt(a.histogram);
-		t.fillStyle = It, r.highlights && Bt(t, o.x + o.w - 8, o.y + 8), r.shadows && Bt(t, o.x + 8, o.y + 8);
+		let r = Lt(a.histogram);
+		t.fillStyle = zt, r.highlights && Ut(t, o.x + o.w - 8, o.y + 8), r.shadows && Ut(t, o.x + 8, o.y + 8);
 	}
 	t.strokeStyle = i.fg, t.globalAlpha = .5, s(o.x, K(0, o), o.x + o.w, K(0, o)), t.globalAlpha = 1;
 	let c = ne(a.fit);
-	t.strokeStyle = a.unstable || !a.fit.valid ? It : i.fg, t.lineWidth = 1.5, t.beginPath(), c.forEach((e, n) => {
+	t.strokeStyle = a.unstable || !a.fit.valid ? zt : i.fg, t.lineWidth = 1.5, t.beginPath(), c.forEach((e, n) => {
 		let r = o.x + n / (c.length - 1) * o.w;
 		n === 0 ? t.moveTo(r, K(e, o)) : t.lineTo(r, K(e, o));
 	}), t.stroke();
-	let l = a.hoverNode ?? (a.cursorEv === null ? null : jt(a.cursorEv));
+	let l = a.hoverNode ?? (a.cursorEv === null ? null : Pt(a.cursorEv));
 	if (t.fillStyle = i.fg, t.strokeStyle = i.fg, O(a.fit).forEach((n, r) => {
-		let i = Dt(e[r], o), a = K(Math.log2(n), o);
+		let i = At(e[r], o), a = K(Math.log2(n), o);
 		t.lineWidth = 6, t.globalAlpha = .3, s(i, K(0, o), i, a), t.globalAlpha = 1, t.lineWidth = 1.5, t.beginPath(), t.arc(i, a, 4, 0, 2 * Math.PI), r === l ? t.fill() : t.stroke();
 	}), a.mouseX !== null) {
-		let e = Ot(a.mouseX, o);
-		t.lineWidth = 1, t.beginPath(), t.arc(a.mouseX, K(Math.log2(D(e, a.fit)), o), Mt(a.fit.sigma, o), 0, 2 * Math.PI), t.stroke();
+		let e = jt(a.mouseX, o);
+		t.lineWidth = 1, t.beginPath(), t.arc(a.mouseX, K(Math.log2(D(e, a.fit)), o), Ft(a.fit.sigma, o), 0, 2 * Math.PI), t.stroke();
 	}
 	if (a.cursorEv !== null) {
-		let e = Ft(a.cursorEv, o);
-		t.strokeStyle = e.outside ? It : i.fg, t.lineWidth = e.outside ? 3 : 1, s(e.x, o.y, e.x, o.y + o.h);
+		let e = Rt(a.cursorEv, o);
+		t.strokeStyle = e.outside ? zt : i.fg, t.lineWidth = e.outside ? 3 : 1, s(e.x, o.y, e.x, o.y + o.h);
 	}
 }
-function Ht() {
+function Gt() {
 	let { useEffect: e, useLayoutEffect: t, useRef: n, useState: r } = z().react, i = z().develop.useParamScope(), a = i.maskId !== null, o = i.getParams(), s = V()((e) => a ? null : e.probe?.histogram ?? null), c = V()((e) => a ? null : e.cursor?.ev ?? null), l = V()((e) => e.unstable) && !a, u = (e) => {
 		a || V().getState().setUnstable(e);
-	}, [d, m] = r(240), [h, g] = r(null), [_, v] = r(null), [y, b] = r(0), x = n(null), S = n(null), C = n(null), w = n(null), T = Tt(d);
+	}, [d, m] = r(240), [h, g] = r(null), [_, v] = r(null), [y, b] = r(0), x = n(null), S = n(null), C = n(null), w = n(null), T = Ot(d);
 	e(() => {
 		let e = x.current;
 		if (!e || typeof ResizeObserver > "u") return;
@@ -1087,10 +1081,9 @@ function Ht() {
 			t > 40 && m(t);
 		});
 		return t.observe(e), () => t.disconnect();
-	}, []), e(() => {
-		let e = new MutationObserver(() => b((e) => e + 1));
-		return e.observe(document.documentElement, { attributes: !0 }), e.observe(document.body, { attributes: !0 }), () => e.disconnect();
-	}, []), t(() => {
+	}, []), e(() => z().stores.useThemeStore.subscribe((e, t) => {
+		e.activeId !== t.activeId && b((e) => e + 1);
+	}), []), t(() => {
 		let e = S.current;
 		if (!e) return;
 		let t = window.devicePixelRatio || 1, n = Math.round(d * t), r = Math.round(T * t);
@@ -1098,8 +1091,8 @@ function Ht() {
 		let i = e.getContext("2d");
 		i && (i.setTransform(t, 0, 0, t, 0, 0), w.current?.epoch !== y && (w.current = {
 			epoch: y,
-			ink: Lt(e)
-		}), Vt(i, d, T, w.current.ink, {
+			ink: Bt(e)
+		}), Wt(i, d, T, w.current.ink, {
 			fit: L(I(o)),
 			histogram: s,
 			hoverNode: h,
@@ -1130,11 +1123,11 @@ function Ht() {
 			moved: !1
 		});
 	}, D = (e) => {
-		let t = E(e), n = Et(d, T);
-		v(t.x), g(At(t.x, n));
+		let t = E(e), n = kt(d, T);
+		v(t.x), g(Nt(t.x, n));
 		let r = C.current;
 		if (!r) return;
-		let a = kt(r, t, n), o = I(i.getParams()), s = te(o.bands, p(o.curveSmoothing), a.x0, a.offset);
+		let a = Mt(r, t, n), o = I(i.getParams()), s = te(o.bands, p(o.curveSmoothing), a.x0, a.offset);
 		s && i.setParams(R({
 			...o,
 			bands: s
@@ -1162,7 +1155,7 @@ function Ht() {
 			borderRadius: 3,
 			background: z().ui.tokens.surface0 ?? "var(--color-surface-0)",
 			touchAction: "none",
-			cursor: "crosshair"
+			cursor: z().cursors.resolve("crosshair")
 		},
 		onPointerDown: ee,
 		onPointerMove: D,
@@ -1182,7 +1175,7 @@ function Ht() {
 //#endregion
 //#region src/presets.ts
 var q = Math.fround;
-function Ut(e) {
+function Kt(e) {
 	let t = q(e), n = q(q(5 / 3) * t);
 	return [
 		t,
@@ -1196,7 +1189,7 @@ function Ut(e) {
 		-t
 	];
 }
-function Wt(e) {
+function qt(e) {
 	let t = q(e), n = (e) => q(q(e / 9) * t);
 	return [
 		-n(15),
@@ -1210,7 +1203,7 @@ function Wt(e) {
 		n(15)
 	];
 }
-var Gt = [
+var Jt = [
 	0,
 	.15,
 	.6,
@@ -1233,16 +1226,16 @@ var Gt = [
 	blending: t,
 	feathering: n,
 	iterations: r,
-	bands: Ut(i)
-}), Kt = (e) => ({
+	bands: Kt(i)
+}), Yt = (e) => ({
 	details: "none",
 	estimator: "norm2",
 	exposureBoost: -1.57,
 	blending: 5,
 	feathering: 500,
 	iterations: 1,
-	bands: Wt(e)
-}), qt = [
+	bands: qt(e)
+}), Xt = [
 	J("Simple tone curve", {
 		details: "none",
 		estimator: "power",
@@ -1265,16 +1258,16 @@ var Gt = [
 	J("Compress shadows/highlights | GF | medium", Y("guided", 3, 500, 3, .45)),
 	J("Compress shadows/highlights | EIGF | soft", Y("eigf", 5, 1, 1, .25)),
 	J("Compress shadows/highlights | GF | soft", Y("guided", 5, 500, 1, .25)),
-	J("Contrast tone curve | soft", Kt(.25)),
-	J("Contrast tone curve | medium", Kt(.45)),
-	J("Contrast tone curve | strong", Kt(.65)),
+	J("Contrast tone curve | soft", Yt(.25)),
+	J("Contrast tone curve | medium", Yt(.45)),
+	J("Contrast tone curve | strong", Yt(.65)),
 	J("Relight: fill-in", {
 		details: "eigf",
 		estimator: "norm2",
 		exposureBoost: -.5,
-		bands: Gt
+		bands: Jt
 	})
-], Jt = [
+], Zt = [
 	{
 		value: "simple",
 		label: "Simple"
@@ -1287,8 +1280,8 @@ var Gt = [
 		value: "masking",
 		label: "Masking"
 	}
-], Yt = (e) => e === 0 ? "+0 EV" : `−${-e} EV`, Xt = e.map((e, t) => ({
-	label: Yt(e),
+], Qt = (e) => e === 0 ? "+0 EV" : `−${-e} EV`, $t = e.map((e, t) => ({
+	label: Qt(e),
 	min: N.band.min,
 	max: N.band.max,
 	hardMin: N.band.min,
@@ -1299,8 +1292,8 @@ var Gt = [
 		...e,
 		bands: e.bands.map((e, r) => r === t ? n : e)
 	}),
-	commitLabel: Yt(e)
-})), Zt = {
+	commitLabel: Qt(e)
+})), en = {
 	label: "Curve smoothing",
 	min: -1,
 	max: 1,
@@ -1313,7 +1306,7 @@ var Gt = [
 		curveSmoothing: t
 	}),
 	commitLabel: "curve smoothing"
-}, Qt = {
+}, tn = {
 	label: "Mask exposure compensation",
 	min: -4,
 	max: 4,
@@ -1326,7 +1319,7 @@ var Gt = [
 		exposureBoost: t
 	}),
 	commitLabel: "mask exposure compensation"
-}, $t = {
+}, nn = {
 	label: "Mask contrast compensation",
 	min: -2,
 	max: 2,
@@ -1339,7 +1332,7 @@ var Gt = [
 		contrastBoost: t
 	}),
 	commitLabel: "mask contrast compensation"
-}, en = {
+}, rn = {
 	label: "Filter diffusion",
 	min: 1,
 	max: 5,
@@ -1352,7 +1345,7 @@ var Gt = [
 		iterations: Math.round(t)
 	}),
 	commitLabel: "filter diffusion"
-}, tn = {
+}, an = {
 	label: "Smoothing diameter",
 	min: 1,
 	max: 45,
@@ -1365,7 +1358,7 @@ var Gt = [
 		blending: t
 	}),
 	commitLabel: "smoothing diameter"
-}, nn = {
+}, on = {
 	label: "Edges refinement/feathering",
 	min: .1,
 	max: 50,
@@ -1379,17 +1372,17 @@ var Gt = [
 	}),
 	commitLabel: "edges refinement/feathering"
 };
-function rn(e, t) {
+function sn(e, t) {
 	return {
 		min: Math.max(e.hardMin, Math.min(e.min, t)),
 		max: Math.min(e.hardMax, Math.max(e.max, t))
 	};
 }
-var an = (e) => (String(e).split(".")[1] ?? "").length;
-function on(e, t) {
-	return Number(t.toFixed(an(e.step) + 1));
+var cn = (e) => (String(e).split(".")[1] ?? "").length;
+function ln(e, t) {
+	return Number(t.toFixed(cn(e.step) + 1));
 }
-var sn = [
+var un = [
 	{
 		value: "mean",
 		label: "RGB average"
@@ -1418,7 +1411,7 @@ var sn = [
 		value: "geomean",
 		label: "RGB geometric mean"
 	}
-], cn = [
+], dn = [
 	{
 		value: "none",
 		label: "No"
@@ -1440,22 +1433,22 @@ var sn = [
 		label: "EIGF"
 	}
 ];
-function ln(e) {
+function fn(e) {
 	return {
 		filter: e !== "none",
 		contrast: e === "eigf" || e === "guided"
 	};
 }
-var un = "Scroll over the image to change the tone there: Shift for 1 EV steps, Alt for 0.1 EV. Esc stops.", dn = (e) => Number.isFinite(e) ? e : null;
-function fn(e, t) {
+var pn = "Scroll over the image to change the tone there: Shift for 1 EV steps, Alt for 0.1 EV. Esc stops.", mn = (e) => Number.isFinite(e) ? e : null;
+function hn(e, t) {
 	return e && e.signature === t ? e.histogram : null;
 }
-function pn() {
+function gn() {
 	let e = z().settings.get("tab", "simple");
-	return Jt.find((t) => t.value === e)?.value ?? "simple";
+	return Zt.find((t) => t.value === e)?.value ?? "simple";
 }
-function mn() {
-	let { useEffect: e, useState: t } = z().react, { Slider: n } = z().components, { Button: r, SegmentedControl: i, Select: a, Stack: o, Toggle: s, tokens: c } = z().ui, l = z().stores.useDevelopStore, u = z().develop.useParamScope(), d = u.maskId !== null, [p, m] = t(pn), h = V()((e) => e.probe), g = l((e) => p === "advanced" && !d ? W(e) : ""), _ = V()((e) => e.showMask), v = V()((e) => e.adjusting), y = V()((e) => e.unstable) && !d, b = I(u.getParams()), x = ln(b.details);
+function _n() {
+	let { useEffect: e, useState: t } = z().react, { Slider: n } = z().components, { Button: r, SegmentedControl: i, Select: a, Stack: o, Toggle: s, tokens: c } = z().ui, l = z().stores.useDevelopStore, u = z().develop.useParamScope(), d = u.maskId !== null, [p, m] = t(gn), h = V()((e) => e.probe), g = l((e) => p === "advanced" && !d ? W(e) : ""), _ = V()((e) => e.showMask), v = V()((e) => e.adjusting), y = V()((e) => e.unstable) && !d, b = I(u.getParams()), x = fn(b.details);
 	e(() => {
 		if (d) return;
 		let e = ht();
@@ -1465,10 +1458,10 @@ function mn() {
 			t.setShowMask(!1), t.setAdjusting(!1);
 		};
 	}, [d]);
-	let S = () => I(u.getParams()), C = () => fn(V().getState().probe, W(l.getState())), w = (e) => {
+	let S = () => I(u.getParams()), C = () => hn(V().getState().probe, W(l.getState())), w = (e) => {
 		d || V().getState().setUnstable(!1), u.setParams(R(e));
 	}, T = (e) => u.commit(`Tone Equalizer ${e}`), E = (e) => {
-		let t = on(e, e.read(b)), r = rn(e, t);
+		let t = ln(e, e.read(b)), r = sn(e, t);
 		return B(n, {
 			key: e.label,
 			label: e.label,
@@ -1515,8 +1508,39 @@ function mn() {
 		display: "flex",
 		alignItems: "flex-end",
 		gap: 6
-	} }, B("div", { style: { flex: 1 } }, e), t), ne = {
-		simple: () => Xt.map(E),
+	} }, B("div", { style: { flex: 1 } }, e), t);
+	return B(o, {
+		gap: 8,
+		style: { padding: "6px 8px 8px" }
+	}, B(a, {
+		value: "",
+		placeholder: "Preset",
+		ariaLabel: "Preset",
+		options: Xt.map((e) => ({
+			value: e.name,
+			label: e.name
+		})),
+		onChange: (e) => {
+			let t = Xt.find((t) => t.name === e);
+			t && (w(t.params), T(`preset ${t.name}`));
+		}
+	}), B(i, {
+		value: p,
+		size: "sm",
+		options: Zt.map((e) => ({
+			value: e.value,
+			label: e.label
+		})),
+		onChange: (e) => {
+			let t = Zt.find((t) => t.value === e);
+			t && (m(t.value), z().settings.set("tab", t.value));
+		}
+	}), B("div", { style: {
+		display: "flex",
+		flexDirection: "column",
+		gap: 4
+	} }, ...{
+		simple: () => $t.map(E),
 		advanced: () => {
 			let e = (y || !L(b).valid && b.bands.some((e) => e !== 0)) && B("p", {
 				key: "unstable",
@@ -1525,91 +1549,55 @@ function mn() {
 					fontSize: 10,
 					color: "rgb(191, 128, 0)"
 				}
-			}, "The interpolation is unstable, decrease the curve smoothing"), t = fn(h, g) !== null, n = O(t, "Auto-adjust the mask exposure", "auto mask exposure", (e) => {
-				let t = S(), n = dn(oe(e.first, e.last, t.exposureBoost, t.contrastBoost));
+			}, "The interpolation is unstable, decrease the curve smoothing"), t = hn(h, g) !== null, n = O(t, "Auto-adjust the mask exposure", "auto mask exposure", (e) => {
+				let t = S(), n = mn(oe(e.first, e.last, t.exposureBoost, t.contrastBoost));
 				return n === null ? null : {
 					...t,
 					exposureBoost: n
 				};
 			}), r = O(t, "Auto-adjust the mask contrast", "auto mask contrast", (e) => {
-				let t = S(), n = dn(se(e.first, e.last, t));
+				let t = S(), n = mn(se(e.first, e.last, t));
 				return n === null ? null : {
 					...t,
 					contrastBoost: n
 				};
 			}), i = (e, t) => d ? E(e) : te(E(e), t);
 			return [
-				B(Ht, { key: "graph" }),
+				B(Gt, { key: "graph" }),
 				e,
-				E(Zt),
-				i(Qt, n),
-				x.contrast ? i($t, r) : null
+				E(en),
+				i(tn, n),
+				x.contrast ? i(nn, r) : null
 			];
 		},
 		masking: () => [
-			D("Luminance estimator", b.estimator, sn, (e) => ({
+			D("Luminance estimator", b.estimator, un, (e) => ({
 				...S(),
 				estimator: e
 			}), "luminance estimator"),
-			D("Preserve details", b.details, cn, (e) => ({
+			D("Preserve details", b.details, dn, (e) => ({
 				...S(),
 				details: e
 			}), "preserve details"),
 			...x.filter ? [
-				E(en),
-				E(tn),
-				E(nn)
+				E(rn),
+				E(an),
+				E(on)
 			] : []
 		]
-	}, k = B(a, {
-		value: "",
-		placeholder: "Preset",
-		ariaLabel: "Preset",
-		options: qt.map((e) => ({
-			value: e.name,
-			label: e.name
-		})),
-		onChange: (e) => {
-			let t = qt.find((t) => t.name === e);
-			t && (w(t.params), T(`preset ${t.name}`));
-		}
-	}), A = {
-		margin: 0,
-		fontSize: 10,
-		lineHeight: 1.4,
-		color: c.textMuted
-	};
-	return B(o, {
-		gap: 8,
-		style: { padding: "6px 8px 8px" }
-	}, k, B(i, {
-		value: p,
-		size: "sm",
-		options: Jt.map((e) => ({
-			value: e.value,
-			label: e.label
-		})),
-		onChange: (e) => {
-			let t = Jt.find((t) => t.value === e);
-			t && (m(t.value), z().settings.set("tab", t.value));
-		}
-	}), B("div", { style: {
-		display: "flex",
-		flexDirection: "column",
-		gap: 4
-	} }, ...ne[p]()), d ? null : B(s, {
+	}[p]()), d ? null : B(s, {
 		label: "Display exposure mask",
 		checked: _,
 		onChange: (e) => V().getState().setShowMask(e)
-	}), d ? null : B(s, {
+	}), d ? null : B("span", { title: pn }, B(s, {
 		label: "Adjust on image",
 		checked: v,
 		onChange: (e) => V().getState().setAdjusting(e)
-	}), v && !d ? B("p", { style: A }, un) : null);
+	})));
 }
 //#endregion
 //#region src/glsl.ts
-function hn(e) {
+function vn(e) {
 	let t = e.toPrecision(10);
 	if (/e/i.test(t)) {
 		let [e, n] = t.split(/e/i);
@@ -1617,8 +1605,8 @@ function hn(e) {
 	}
 	return t.includes(".") ? t.replace(/0+$/, "").replace(/\.$/, ".0") : `${t}.0`;
 }
-var X = hn, gn = X(r), _n = `
-float teFloor(float v) { return v > ${gn} ? v : ${gn}; }
+var X = vn, yn = X(r), bn = `
+float teFloor(float v) { return v > ${yn} ? v : ${yn}; }
 float teNorm(vec3 p) {
   if (fNorm == 0) return length(p);
   if (fNorm == 1) return (p.r + p.g + p.b) / 3.0;
@@ -1642,15 +1630,15 @@ float teEigfBlend(float m, float avg, float vari) {
   float o = a * m + (1.0 - a) * avg;
   return teFloor(o);
 }
-`, vn = `${_n}
+`, xn = `${bn}
 float teLongEdge() { return floor(max(1.0 / uTexel.x, 1.0 / uTexel.y) + 0.5); }
 float teRadius() { return trunc((fDiameter * teLongEdge() - 1.0) / 2.0); }
 vec3 teState(float m) {
   float s = min(m, ${X(128)});
   return vec3(s, s * s, min(m, ${X(s)}));
 }
-`, yn = (e) => X(c[e + 2]), bn = `${vn}
-float teB3(int d) { d = d < 0 ? -d : d; return d == 0 ? ${yn(0)} : (d == 1 ? ${yn(1)} : ${yn(2)}); }
+`, Sn = (e) => X(c[e + 2]), Cn = `${xn}
+float teB3(int d) { d = d < 0 ? -d : d; return d == 0 ? ${Sn(0)} : (d == 1 ? ${Sn(1)} : ${Sn(2)}); }
 float teSpacing(int levels) {
   float sigma = ${X(l)} * max(teRadius(), 1.0);
   float fl = float(levels);
@@ -1666,7 +1654,7 @@ vec3 teBlur(vec3 centre, float spacing) {
   }
   return vec3(sum, centre.z);
 }
-`, xn = `${vn}
+`, wn = `${xn}
 float teSpacing(int levels) {
   float r = teRadius();
   float dsr = r < 4.0 ? 1.0 : floor(r / 4.0);
@@ -1679,7 +1667,7 @@ vec3 teBlur(vec3 centre, float spacing) {
            + readPrev(vUv + vec2(-o, o) * uTexel).xy + readPrev(vUv + vec2(o, o) * uTexel).xy;
   return vec3(0.25 * sum, centre.z);
 }
-`, Sn = X(o), Cn = `
+`, Tn = X(o), En = `
 int levels = fLevels;
 int per = levels + 1;
 int iteration = uPassIndex / per;
@@ -1689,16 +1677,16 @@ if (k == 0) {
   c = teState(m);
 } else {
   float spacing = teSpacing(levels) * exp2(float(k - 1));
-  if (spacing >= ${Sn}) c = teBlur(c, spacing);
+  if (spacing >= ${Tn}) c = teBlur(c, spacing);
   if (k == levels) c.y = max(c.y - c.x * c.x, 0.0);
 }
-`, wn = `
+`, Dn = `
 int levels = fLevels;
 int per = 2 * levels + 2;
 int iteration = uPassIndex / per;
 int k = uPassIndex - iteration * per;
 if (k == 0) {
-  float m = iteration == 0 ? teMask(c) : max(c.x * c.z + c.y, ${gn});
+  float m = iteration == 0 ? teMask(c) : max(c.x * c.z + c.y, ${yn});
   c = teState(m);
 } else if (k == levels + 1) {
   float a = c.y / max(c.y + fEps, 1.0e-15);
@@ -1706,20 +1694,20 @@ if (k == 0) {
 } else {
   int level = k <= levels ? k - 1 : k - levels - 2;
   float spacing = teSpacing(levels) * exp2(float(level));
-  if (spacing >= ${Sn}) c = teBlur(c, spacing);
+  if (spacing >= ${Tn}) c = teBlur(c, spacing);
   if (k == levels) c.y = max(c.y - c.x * c.x, 0.0);
 }
-`, Tn = t.map((e, t) => `teGauss(e, ${X(e)}) * ${t < 4 ? "w0" : "w1"}.${"xyzw"[t % 4]}`).join("\n    + "), En = `${_n}
+`, On = t.map((e, t) => `teGauss(e, ${X(e)}) * ${t < 4 ? "w0" : "w1"}.${"xyzw"[t % 4]}`).join("\n    + "), kn = `${bn}
 float teGauss(float e, float centre) {
   float d = e - centre;
   return exp(-d * d * gDenom);
 }
 float teGain(float m) {
   float e = clamp(log2(m), ${X(-8)}, ${X(0)});
-  float s = ${Tn};
+  float s = ${On};
   return clamp(s, ${X(i)}, ${X(4)});
 }
-`, Dn = "\nfloat teMaskOut = -1.0;\nif (on > 0.5 || probe > 0.5) {\n  float m = teMask(lin);\n  float mi = m;\n  float mp = m;\n  if (fMode == 2) {\n    mi = fIterations > 1 ? stageResult.z : m;\n    mp = teEigfBlend(mi, stageResult.x, stageResult.y);\n  } else if (fMode == 1) {\n    mp = teFloor(stageResult.x * m + stageResult.y);\n  }\n  if (fMode != 0 && fAverage == 1) mp = sqrt(mi * mp);\n  teMaskOut = mp;\n  if (on > 0.5) lin *= teGain(mp);\n}\n", On = "\nfloat tm = isv_toneEqualizerMask;\nif (mode == 1) {\n  c = tm > 0.0 ? vec3(sqrt(clamp((tm - 0.00390625) / 0.99609375, 0.0, 1.0))) : vec3(0.5);\n} else if (mode == 2) {\n  if (tm > 0.0) {\n    float q = floor(clamp((log2(tm) + 16.0) / 24.0, 0.0, 1.0) * 65535.0 + 0.5);\n    float hi = floor(q / 256.0);\n    c = vec3(hi / 255.0, (q - hi * 256.0) / 255.0, 1.0);\n  } else {\n    c = vec3(0.0);\n  }\n}\n", kn = [
+`, An = "\nfloat teMaskOut = -1.0;\nif (on > 0.5 || probe > 0.5) {\n  float m = teMask(lin);\n  float mi = m;\n  float mp = m;\n  if (fMode == 2) {\n    mi = fIterations > 1 ? stageResult.z : m;\n    mp = teEigfBlend(mi, stageResult.x, stageResult.y);\n  } else if (fMode == 1) {\n    mp = teFloor(stageResult.x * m + stageResult.y);\n  }\n  if (fMode != 0 && fAverage == 1) mp = sqrt(mi * mp);\n  teMaskOut = mp;\n  if (on > 0.5) lin *= teGain(mp);\n}\n", jn = "\nfloat tm = isv_toneEqualizerMask;\nif (mode == 1) {\n  c = tm > 0.0 ? vec3(sqrt(clamp((tm - 0.00390625) / 0.99609375, 0.0, 1.0))) : vec3(0.5);\n} else if (mode == 2) {\n  if (tm > 0.0) {\n    float q = floor(clamp((log2(tm) + 16.0) / 24.0, 0.0, 1.0) * 65535.0 + 0.5);\n    float hi = floor(q / 256.0);\n    c = vec3(hi / 255.0, (q - hi * 256.0) / 255.0, 1.0);\n  } else {\n    c = vec3(0.0);\n  }\n}\n", Mn = [
 	"−8 EV",
 	"−7 EV",
 	"−6 EV",
@@ -1738,7 +1726,7 @@ float teGain(float m) {
 }), Q = (e, t, n) => ({
 	...Z(e, t, n),
 	glslType: "int"
-}), An = (e) => ({
+}), Nn = (e) => ({
 	key: e,
 	glslType: "vec4",
 	default: [
@@ -1747,8 +1735,8 @@ float teGain(float m) {
 		0,
 		0
 	]
-}), jn = [
-	...Fe.map((e, t) => Z(e, kn[t], {
+}), Pn = [
+	...j.map((e, t) => Z(e, Mn[t], {
 		min: -2,
 		max: 2,
 		step: .01
@@ -1793,30 +1781,30 @@ float teGain(float m) {
 		max: 9999,
 		step: .01
 	})
-], Mn = [
+], Fn = [
 	Z("fEps"),
 	Z("fExposure"),
 	Z("fFulcrum"),
 	Z("fContrast"),
 	Q("fNorm")
-], Nn = [
+], In = [
 	Z("on"),
 	Z("probe"),
-	An("w0"),
-	An("w1"),
+	Nn("w0"),
+	Nn("w1"),
 	Z("gDenom"),
 	Q("fMode"),
 	Q("fAverage"),
 	Q("fIterations"),
-	...Mn
-], Pn = [
+	...Fn
+], Ln = [
 	Q("fLevels"),
 	Z("fDiameter"),
-	...Mn
+	...Fn
 ];
-function Fn() {
+function Rn() {
 	return {
-		id: Me,
+		id: Ne,
 		name: "Tone Equalizer",
 		phase: "scene-linear",
 		priority: 50,
@@ -1825,28 +1813,28 @@ function Fn() {
 			encoding: "linear",
 			primaries: "rec2020"
 		},
-		glsl: Dn,
-		helpers: En,
-		uniforms: [...jn, ...Nn],
+		glsl: An,
+		helpers: kn,
+		uniforms: [...Pn, ...In],
 		passes: [{
-			glsl: Cn,
-			helpers: bn,
+			glsl: En,
+			helpers: Cn,
 			iterations: {
 				key: "fDrawsEigf",
 				max: 300
 			},
-			uniforms: [...Pn, Q("fDrawsEigf")]
+			uniforms: [...Ln, Q("fDrawsEigf")]
 		}, {
-			glsl: wn,
-			helpers: xn,
+			glsl: Dn,
+			helpers: wn,
 			iterations: {
 				key: "fDrawsGuided",
 				max: 600
 			},
-			uniforms: [...Pn, Q("fDrawsGuided")]
+			uniforms: [...Ln, Q("fDrawsGuided")]
 		}],
 		produces: [{
-			name: Pe,
+			name: Fe,
 			glslType: "float",
 			producer: "teMaskOut"
 		}],
@@ -1854,9 +1842,9 @@ function Fn() {
 		mask: { maskable: !0 }
 	};
 }
-function In() {
+function zn() {
 	return {
-		id: Ne,
+		id: Pe,
 		name: "Tone Equalizer mask view",
 		phase: "output-encode",
 		priority: 1e5,
@@ -1864,50 +1852,51 @@ function In() {
 			encoding: "perceptual",
 			primaries: "rec709"
 		},
-		glsl: On,
+		glsl: jn,
 		uniforms: [{
 			key: "mode",
 			glslType: "int",
 			default: 0
 		}],
-		consumes: [Pe],
+		consumes: [Fe],
 		presetScope: "per-image"
 	};
 }
-function Ln() {
-	return [Fn(), In()];
+function Bn() {
+	return [Rn(), zn()];
 }
 //#endregion
 //#region src/index.ts
-var Rn = `${je}.panel`, zn = `${je}.overlay`, $ = null;
-function Bn() {
+var Vn = `${Me}.panel`, Hn = `${Me}.overlay`, $ = null, Un = null;
+function Wn() {
 	let e = z().stores.useDevelopStore.getState();
 	e.setDynParams(qe()), V().getState().setUnstable(!1), e.commitEdit("Tone Equalizer reset");
 }
-function Vn(e) {
+function Gn(e) {
 	Qe(e), tt();
-	for (let t of Ln()) e.registerProcessingStage(t);
+	for (let t of Bn()) e.registerProcessingStage(t);
 	e.registerPanel({
-		id: Rn,
+		id: Vn,
 		title: "Tone Equalizer",
-		component: mn,
+		component: _n,
 		defaultDock: {
 			module: "develop",
 			direction: "right",
 			order: 6,
 			width: 268
 		},
-		onReset: Bn,
+		modules: ["develop"],
+		onReset: Wn,
 		mask: {
-			component: mn,
+			component: _n,
 			owns: [...Ie, ...Le].map(M)
 		}
 	}), e.registerSlot({
-		id: zn,
+		id: Hn,
 		slot: "develop-canvas-overlay",
-		component: Ct,
+		component: Et,
 		order: 55
-	}), $?.(), $ = e.stores.useDevelopStore.subscribe((e, t) => {
+	}), $?.(), Un?.(), Un = Tt(), $ = e.stores.useDevelopStore.subscribe((e, t) => {
 		if (e.photoId !== t.photoId) {
 			let e = V().getState();
 			e.setShowMask(!1), e.setAdjusting(!1), e.setUnstable(!1);
@@ -1922,13 +1911,13 @@ function Vn(e) {
 		n && e.setDynParams(n);
 	});
 }
-function Hn() {
+function Kn() {
 	if (!$) return;
 	$(), $ = null;
 	let e = V().getState();
-	e.setAdjusting(!1), e.setShowMask(!1);
+	e.setAdjusting(!1), Un?.(), Un = null, e.setShowMask(!1);
 }
 //#endregion
-export { Vn as activate, Hn as deactivate };
+export { Gn as activate, Kn as deactivate };
 
 //# sourceMappingURL=index.js.map

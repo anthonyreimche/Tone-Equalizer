@@ -1,7 +1,8 @@
-// The develop-canvas overlay: Adjust on image (darktable's scroll-on-image and
-// correction cursor, te.c:2732-2929) and the Display exposure mask layer.
-// While adjusting, the layer captures pointer and wheel; Ctrl/⌘/Space make it
-// click-through so pan and zoom keep working, and Esc leaves the mode.
+// The develop canvas's overlays: Adjust on image (darktable's scroll-on-image
+// and correction cursor, te.c:2732-2929) and the Display exposure mask layer.
+// While adjusting, the extension holds the canvas with a zoomable tool that
+// captures pointer and wheel; core hands Ctrl/⌘/Space to pan and zoom and
+// leaves the mode on Esc. The mask layer is a plain slot overlay.
 
 import type { CSSProperties, ReactElement, PointerEvent as ReactPointerEvent } from "react";
 import { interactiveEdit } from "./curve";
@@ -32,6 +33,7 @@ import { deriveAll, fitOf, readParams, type Bag } from "./params";
 import { effectiveBag, maskViewPatch, probeSignature } from "./readback";
 import { api, h } from "./runtime";
 import { createScheduler, type Scheduler } from "./schedule";
+import type { CanvasTool, OverlayRect2 } from "./safelight";
 import { store, type ImageCursor } from "./store";
 
 export const COMMIT_DELAY_MS = 400;
@@ -87,7 +89,7 @@ function CorrectionCursor(props: { cursor: ImageCursor; paramBag: Bag }): ReactE
   );
 }
 
-function AdjustLayer(): ReactElement | null {
+export function AdjustTool(_props: { rect: OverlayRect2 }): ReactElement | null {
   const { useEffect, useRef, useState } = api().react;
   const adjusting = store()((s) => s.adjusting);
   const cursor = store()((s) => s.cursor);
@@ -95,41 +97,9 @@ function AdjustLayer(): ReactElement | null {
   const paramBag = dev((s) => s.paramBag);
   const overlay = api().develop.useDevelopOverlay();
   const ref = useRef<HTMLDivElement | null>(null);
-  const [passthrough, setPassthrough] = useState(false);
   const [wheel] = useState(createWheelAccumulator);
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const edited = useRef(false);
-
-  useEffect(() => {
-    if (!adjusting) return;
-    const held = new Set<string>();
-    const update = () => setPassthrough(held.has("Control") || held.has("Meta") || held.has(" "));
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (!e.defaultPrevented) store().getState().setAdjusting(false);
-        return;
-      }
-      held.add(e.key);
-      update();
-    };
-    const onKeyUp = (e: KeyboardEvent) => {
-      held.delete(e.key);
-      update();
-    };
-    const onBlur = () => {
-      held.clear();
-      update();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    window.addEventListener("blur", onBlur);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-      window.removeEventListener("blur", onBlur);
-      setPassthrough(false);
-    };
-  }, [adjusting]);
 
   const settled = () => {
     settleTimer.current = null;
@@ -162,9 +132,9 @@ function AdjustLayer(): ReactElement | null {
   };
 
   // Attached natively and non-passive: React's onWheel can't preventDefault.
-  // A bare wheel this layer leaves alone goes nowhere, since the slot is a
+  // A bare wheel this layer leaves alone goes nowhere, since the overlay is a
   // sibling of the viewport frame, not inside it; darktable swallows the
-  // scroll the same way. Ctrl/⌘ still zoom through the host's passthrough.
+  // scroll the same way. Ctrl/⌘ still zoom: the tool is zoomable.
   useEffect(() => {
     const el = ref.current;
     if (!el || !adjusting) return;
@@ -186,12 +156,10 @@ function AdjustLayer(): ReactElement | null {
   if (!adjusting) return null;
 
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    const box = el.getBoundingClientRect();
-    const scale = box.width > 0 && el.clientWidth > 0 ? el.clientWidth / box.width : 1;
+    const local = api().develop.framePoint(e.currentTarget, e.clientX, e.clientY);
     // The probe renders the whole image; `rect` is only the visible window once zoomed.
     const imageRect = overlay.imageRect;
-    const uv = pointToUv(e.clientX, e.clientY, box, scale, imageRect);
+    const uv = pointToUv(local, imageRect);
     if (imageRect && !uv) {
       store().getState().setCursor(null);
       return;
@@ -201,13 +169,12 @@ function AdjustLayer(): ReactElement | null {
       uv && probe
         ? cursorExposure(probe.ev, probe.width, probe.height, Math.min(probe.width - 1, Math.floor(uv.x * probe.width)), Math.min(probe.height - 1, Math.floor(uv.y * probe.height)))
         : null;
-    store().getState().setCursor({ ev, local: { x: (e.clientX - box.left) * scale, y: (e.clientY - box.top) * scale } });
+    store().getState().setCursor({ ev, local });
   };
 
   const style: CSSProperties = {
     position: "absolute",
     inset: 0,
-    pointerEvents: passthrough ? "none" : "auto",
     cursor: cursor ? "none" : api().cursors.resolve("crosshair"),
   };
 
@@ -313,11 +280,37 @@ function MaskLayer(): ReactElement | null {
   });
 }
 
+/** Ends Adjust on image once core has let the canvas go: another extension's
+ *  tool, or leaving Develop. */
+function AdjustWatch(): null {
+  const { useEffect } = api().react;
+  const adjusting = store()((s) => s.adjusting);
+  const held = api().develop.useCanvasToolHeld();
+  useEffect(() => {
+    if (adjusting && !held) store().getState().setAdjusting(false);
+  }, [adjusting, held]);
+  return null;
+}
+
+export const ADJUST_TOOL: CanvasTool = {
+  overlay: AdjustTool,
+  zoomable: true,
+  onEscape: () => store().getState().setAdjusting(false),
+};
+
+/** Holds the canvas with the Adjust tool while it is on, and lets it go when
+ *  it ends. Returns the unsubscribe. */
+export function holdAdjustTool(): () => void {
+  return store().subscribe((state, prev) => {
+    if (state.adjusting !== prev.adjusting) api().develop.setCanvasTool(state.adjusting ? ADJUST_TOOL : null);
+  });
+}
+
 export function ToneEqualizerOverlay(): ReactElement {
   return h(
     "div",
     { style: { position: "absolute", inset: 0, pointerEvents: "none" } },
     h(MaskLayer, null),
-    h(AdjustLayer, null),
+    h(AdjustWatch, null),
   );
 }
